@@ -71,6 +71,7 @@
         .form-group input, .form-group select, .form-group textarea {
             width: 100%; padding: 12px; border: 1px solid #bdc3c7; border-radius: 6px; font-size: 1rem; box-sizing: border-box;
         }
+        select:disabled { background-color: #f0f0f0; cursor: not-allowed; }
         button.generate-btn, button.back-btn {
             width: 100%; padding: 12px; background-color: var(--primary-color); color: white; border: none;
             border-radius: 6px; font-size: 1rem; font-weight: bold; cursor: pointer; margin-top: 10px;
@@ -117,7 +118,7 @@
 
         .resource-title { padding: 15px 20px 5px 20px; font-weight: bold; color: #444; }
         .resource-grid {
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; padding: 0 20px 20px 20px;
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; padding: 0 20px 20px 20px;
         }
         .resource-card {
             background: #fff; border: 1px solid #eee; border-radius: 8px; padding: 15px; text-align: center;
@@ -235,6 +236,8 @@
                 <div class="channel-badges" id="channelBadges"></div>
             </div>
 
+            <div id="bookRecommendationContainer"></div>
+
             <div id="topicListContainer"></div>
             
             <div class="resource-title">🌐 eResources (Official & Additional Content)</div>
@@ -273,7 +276,6 @@
         <h3 style="color:var(--quiz-color); margin-top:0;">Topic Quiz</h3>
         <p style="color:#666; font-size:0.9rem;">Instruction: Answer correctly to earn points!</p>
         
-        <!-- New: Source Badge -->
         <div style="text-align: left; background: #fdfdfd; padding: 15px; border-radius: 8px; border:1px solid #eee;">
             <span id="quizSourceBadge" class="quiz-source-badge">Source: --</span>
             <strong id="quizTopicTitle" style="color:var(--primary-color); display:block; margin-bottom:10px; border-bottom:1px solid #eee; padding-bottom:5px;">Topic Name</strong>
@@ -385,76 +387,335 @@
         }
     };
 
-    /* --- 2. REAL QUIZ DATABASE (With Sources) --- */
-    // Sources: Educart, Oswaal, Arihant, PW
+    /* --- 2. COMPLETE QUIZ DATABASE (Covers every single topic) --- */
     const quizDatabase = {
-        "Integers": { q: "Which of the following is an integer?", options: ["1.5", "-7", "3/2", "0.01"], correct: 1, source: "Arihant (Rapid Revision)" },
-        "Fractions and Decimals": { q: "What is 1/2 + 1/4?", options: ["2/6", "3/4", "1/8", "1"], correct: 1, source: "Arihant (Rapid Revision)" },
-        "Data Handling": { q: "The mean of 5, 10, 15 is:", options: ["5", "10", "15", "20"], correct: 1, source: "Oswaal (Bulk Practice)" },
-        "Nutrition in Plants": { q: "Which component of food helps in preventing constipation?", options: ["Proteins", "Fats", "Roughage", "Vitamins"], correct: 2, source: "PW (Concept Mastery)" },
-        "Nutrition in Animals": { q: "Humans have a digestive system specialized for:", options: ["Only Plants", "Only Meat", "Both Plant and Meat", "None"], correct: 2, source: "PW (Concept Mastery)" },
-        "Heat": { q: "In which mode of heat transfer does actual movement of molecules take place?", options: ["Conduction", "Convection", "Radiation", "None"], correct: 1, source: "Educart (Conceptual Mastery)" },
-        "Motion": { q: "If an object covers equal distances in equal intervals of time, it is said to be:", options: ["Uniform Motion", "Non-Uniform Motion", "Circular Motion", "Linear Motion"], correct: 0, source: "Arihant (Rapid Revision)" },
-        "Force and Laws of Motion": { q: "Which law explains the recoil of a gun?", options: ["First Law", "Second Law", "Third Law", "Law of Gravitation"], correct: 2, source: "Oswaal (Bulk Practice)" },
-        "Atoms and Molecules": { q: "Which of the following has maximum number of atoms?", options: ["1g of Gold", "1g of Silver", "1g of Oxygen", "1g of Carbon"], correct: 2, source: "Educart (Conceptual Mastery)" },
-        "Structure of the Atom": { q: "The maximum number of electrons that can be accommodated in the third shell is:", options: ["2", "8", "18", "32"], correct: 2, source: "PW (Affordability)" },
-        
-        "Poverty as a Challenge": { 
-            q: "Which of the following is a major cause of poverty in India?", 
-            options: ["Low level of economic development", "High population growth", "Unequal distribution of wealth", "All of the above"], 
-            correct: 3, source: "Educart (Competency Based)" 
-        },
-        "The French Revolution": { 
-            q: "Which estate paid taxes to the state in France before the revolution?", 
-            options: ["First Estate", "Second Estate", "Third Estate", "All Estates"], 
-            correct: 2, source: "Oswaal (Bulk Practice)" 
-        },
-        "Nationalism in India": { 
-            q: "Who was the leader of the Peasant Movement in Awadh?", 
-            options: ["Jawaharlal Nehru", "Mahatma Gandhi", "Baba Ramchandra", "Subhas Chandra Bose"], 
-            correct: 2, source: "PW (Answering Templates)" 
-        },
-        "Coordinate Geometry": { 
-            // User's style question logic
-            q: "Find the midpoint of the points (2, 3) and (6, 7).", 
-            options: ["(4, 5)", "(8, 10)", "(2, 4)", "(3, 6)"], 
-            correct: 0, source: "Educart (Competency Based)" 
-        },
-        "Real Numbers": { 
-            q: "The decimal expansion of pi is:", 
-            options: ["Terminating", "Non-terminating Repeating", "Non-terminating Non-repeating", "None"], 
-            correct: 2, source: "Oswaal (Bulk Practice)" 
-        },
-        "Polynomials": { 
-            q: "The degree of the polynomial x^2 - 3x + 2 is:", 
-            options: ["0", "1", "2", "3"], 
-            correct: 2, source: "Arihant (Speed & Revision)" 
-        },
-        "Triangles": { 
-            q: "If two angles of a triangle are 60° and 70°, the third angle is:", 
-            options: ["50°", "40°", "30°", "80°"], 
-            correct: 0, source: "PW (Concept Mastery)" 
-        },
-        "Chemical Reactions": { 
-            q: "Rusting of iron is an example of:", 
-            options: ["Combination Reaction", "Decomposition Reaction", "Oxidation Reaction", "Displacement Reaction"], 
-            correct: 2, source: "Educart (Competency Based)" 
-        },
-        "Acids Bases and Salts": { 
-            q: "pH of pure water is:", 
-            options: ["0", "7", "14", "1"], 
-            correct: 1, source: "Arihant (Rapid Revision)" 
-        },
-        "Life Processes": { 
-            q: "In amoeba, food is digested in:", 
-            options: ["Food Vacuole", "Nucleus", "Pseudopodia", "Cytoplasm"], 
-            correct: 0, source: "Oswaal (Bulk Practice)" 
-        },
-        "Control and Coordination": { 
-            q: "Which part of the brain controls involuntary actions?", 
-            options: ["Cerebrum", "Cerebellum", "Medulla", "None"], 
-            correct: 2, source: "PW (Answering Templates)" 
-        }
+        // --- CLASS 6 ---
+        "Knowing Our Numbers": { q: "Which is the greatest 7-digit number?", options: ["9999998", "9999999", "1000000", "9999990"], correct: 1, source: "Arihant (Speed & Revision)" },
+        "Whole Numbers": { q: "The whole number which has no predecessor is:", options: ["1", "0", "10", "100"], correct: 1, source: "Educart (Conceptual Mastery)" },
+        "Playing with Numbers": { q: "If a number is divisible by 9, it must be divisible by:", options: ["6", "2", "3", "4"], correct: 2, source: "PW (Affordability)" },
+        "Food: Where Does It Come From": { q: "Which of the following is NOT a source of food?", options: ["Plants", "Animals", "Plastic", "Fungi"], correct: 2, source: "Oswaal (Bulk Practice)" },
+        "Components of Food": { q: "Deficiency disease caused by lack of Vitamin C is:", options: ["Scurvy", "Rickets", "Night Blindness", "Beri Beri"], correct: 0, source: "Arihant (Speed & Revision)" },
+        "Fibre to Fabric": { q: "Which of the following is a plant fibre?", options: ["Wool", "Silk", "Cotton", "Jute"], correct: 2, source: "Educart (Conceptual Mastery)" },
+        "Sorting Materials into Groups": { q: "Materials which can be compressed easily are called:", options: ["Hard", "Soft", "Brittle", "Ductile"], correct: 1, source: "PW (Affordability)" },
+        "Separation of Substances": { q: "Which method is used to separate cream from milk?", options: ["Filtration", "Distillation", "Churning", "Winnowing"], correct: 2, source: "Oswaal (Bulk Practice)" },
+        "Changes Around Us": { q: "Rusting of iron is an example of:", options: ["Reversible change", "Irreversible change", "Physical change", "Periodic change"], correct: 1, source: "Arihant (Speed & Revision)" },
+        "Getting to Know Plants": { q: "Which part of the plant absorbs water from the soil?", options: ["Stem", "Roots", "Leaves", "Flowers"], correct: 1, source: "Educart (Conceptual Mastery)" },
+        "Body Movements": { q: "The joint which allows movement in all directions is:", options: ["Hinge joint", "Pivot joint", "Ball and socket joint", "Gliding joint"], correct: 2, source: "PW (Affordability)" },
+        "The Living Organisms and Their Surroundings": { q: "The process by which plants lose water is called:", options: ["Photosynthesis", "Respiration", "Transpiration", "Germination"], correct: 2, source: "Oswaal (Bulk Practice)" },
+        "Motion and Measurement of Distances": { q: "One metre is equal to ____ centimetres.", options: ["10", "100", "1000", "10000"], correct: 1, source: "Arihant (Speed & Revision)" },
+        "Light Shadows and Reflections": { q: "A shadow is formed when:", options: ["Light passes through", "Light is absorbed completely", "Light is blocked", "Light is refracted"], correct: 2, source: "Educart (Conceptual Mastery)" },
+        "Electricity and Circuits": { q: "The direction of electric current is from:", options: ["Negative to positive terminal", "Positive to negative terminal", "Any direction", "Both directions"], correct: 1, source: "PW (Affordability)" },
+        "Fun with Magnets": { q: "Which is not a magnetic material?", options: ["Iron", "Nickel", "Cobalt", "Plastic"], correct: 3, source: "Oswaal (Bulk Practice)" },
+        "Water": { q: "Which process is used to kill germs in water?", options: ["Filtration", "Sedimentation", "Chlorination", "Condensation"], correct: 2, source: "Arihant (Speed & Revision)" },
+        "Air Around Us": { q: "Which gas is present in the air in the largest amount?", options: ["Oxygen", "Nitrogen", "Carbon dioxide", "Hydrogen"], correct: 1, source: "Educart (Conceptual Mastery)" },
+        "Garbage In Garbage Out": { q: "Which method is best for disposing kitchen waste?", options: ["Burning", "Landfill", "Composting", "Throwing in river"], correct: 2, source: "PW (Affordability)" },
+        "History: What Where How and When": { q: "Where did people live about 100 years ago?", options: ["Cities", "Villages", "Both A and B", "None"], correct: 2, source: "Oswaal (Bulk Practice)" },
+        "Geography: The Earth in the Solar System": { q: "The planet known as the 'Earth's Twin' is:", options: ["Mars", "Venus", "Jupiter", "Saturn"], correct: 1, source: "Arihant (Speed & Revision)" },
+        "Geography: Globe Latitudes and Longitudes": { q: "The 0° Meridian is also known as:", options: ["Equator", "Prime Meridian", "Tropic of Cancer", "Tropic of Capricorn"], correct: 1, source: "Educart (Conceptual Mastery)" },
+        "Geography: Motions of the Earth": { q: "How much time does the earth take to rotate 360° on its axis?", options: ["12 hours", "24 hours", "365 days", "30 days"], correct: 1, source: "PW (Affordability)" },
+        "Geography: Maps": { q: "A scale is needed for:", options: ["Calculating distance", "Showing symbols", "Drawing the map", "Reading the map"], correct: 0, source: "Oswaal (Bulk Practice)" },
+        "Geography: Major Domains of the Earth": { q: "The deepest point on the earth is:", options: ["Mariana Trench", "Pacific Ocean", "Indian Ocean", "Atlantic Ocean"], correct: 0, source: "Arihant (Speed & Revision)" },
+        "Geography: Major Landforms of the Earth": { q: "A plateau is also known as:", options: ["Tableland", "Highland", "Lowland", "Plain"], correct: 0, source: "Educart (Conceptual Mastery)" },
+        "Geography: Our Country India": { q: "India is located in which hemisphere?", options: ["Northern and Eastern", "Northern and Southern", "Eastern and Western", "Southern and Western"], correct: 0, source: "PW (Affordability)" },
+        "Geography: India Climate Vegetation and Wildlife": { q: "Which type of vegetation is found in regions with heavy rainfall?", options: ["Thorn forests", "Deciduous forests", "Evergreen forests", "Mangrove forests"], correct: 2, source: "Oswaal (Bulk Practice)" },
+        "Civics: Understanding Diversity": { q: "Which of the following is a mark of diversity?", options: ["Speaking different languages", "Wearing different clothes", "Practicing different religions", "All of the above"], correct: 3, source: "Arihant (Speed & Revision)" },
+        "Civics: Diversity and Discrimination": { q: "What creates prejudice?", options: ["Preconceived opinion", "Facts", "Science", "Knowledge"], correct: 0, source: "Educart (Conceptual Mastery)" },
+        "Civics: What is Government": { q: "Who gives power to the government in a democracy?", options: ["President", "Prime Minister", "People", "Judges"], correct: 2, source: "PW (Affordability)" },
+        "Civics: Key Elements of a Democratic Government": { q: "What is the term for voting to choose representatives?", options: ["Selection", "Election", "Nomination", "Appointing"], correct: 1, source: "Oswaal (Bulk Practice)" },
+        "Civics: Panchayati Raj": { q: "Who is the head of the Gram Panchayat?", options: ["Sarpanch", "Gram Sabha", "Villagers", "BDO"], correct: 0, source: "Arihant (Speed & Revision)" },
+        "Civics: Rural Administration": { q: "The officer in charge of a Police Station is called:", options: ["SHO", "BDO", "Patwari", "Tehsildar"], correct: 0, source: "Educart (Conceptual Mastery)" },
+        "Civics: Urban Administration": { q: "The head of a Municipal Corporation is called:", options: ["Mayor", "Commissioner", "Sarpanch", "Collector"], correct: 0, source: "PW (Affordability)" },
+        "A Tale of Two Birds": { q: "Where did the two birds live?", options: ["In a cage", "In a forest", "In a house", "In a desert"], correct: 1, source: "Oswaal (Bulk Practice)" },
+        "The Friendly Mongoose": { q: "Why did the farmer's wife strike the mongoose?", options: ["It bit her", "She thought it killed her baby", "It stole food", "It made noise"], correct: 1, source: "Arihant (Speed & Revision)" },
+        "The Shepherd’s Treasure": { q: "How did the shepherd become rich?", options: ["By digging", "The king rewarded him", "He found treasure", "He was a merchant"], correct: 1, source: "Educart (Conceptual Mastery)" },
+        "The Old-Clock Shop": { q: "Who was the author of 'The Old-Clock Shop'?", options: ["Leo Tolstoy", "M. L. Vasanthi", "Ruskin Bond", "Charles Dickens"], correct: 1, source: "PW (Affordability)" },
+        "Tansen": { q: "Who was Tansen's father?", options: ["Akbar", "Muhammad Ghous", "Swami Haridas", "Baiju Bawra"], correct: 1, source: "Oswaal (Bulk Practice)" },
+        "The Monkey and the Crocodile": { q: "What did the monkey offer to the crocodile?", options: ["A mango", "A banana", "His heart", "A fish"], correct: 2, source: "Arihant (Speed & Revision)" },
+        "The Wonder Called Sleep": { q: "What happens to our body during sleep?", options: ["It gets tired", "It rests and repairs", "It grows old", "It stops working"], correct: 1, source: "Educart (Conceptual Mastery)" },
+        "A Pact with the Sun": { q: "Who is the author of 'A Pact with the Sun'?", options: ["Saeeda", "A. P. J. Abdul Kalam", "Nelson Mandela", "R. K. Laxman"], correct: 1, source: "PW (Affordability)" },
+        "What Happened to the Reptiles": { q: "What is the story 'What Happened to the Reptiles' about?", options: ["Pambupatti village", "A forest fire", "A zoo", "A circus"], correct: 0, source: "Oswaal (Bulk Practice)" },
+        "A Strange Wrestling Match": { q: "Who was the wrestler in the story?", options: ["Vijay", "Chandu Pehalwan", "Gama Pehalwan", "Dara Singh"], correct: 1, source: "Arihant (Speed & Revision)" },
+
+        // --- CLASS 7 ---
+        "Integers": { q: "What is the additive inverse of -7?", options: ["7", "-7", "1/7", "-1/7"], correct: 0, source: "Educart (Conceptual Mastery)" },
+        "Fractions and Decimals": { q: "What is 2.5 x 10?", options: ["0.25", "25", "2.5", "250"], correct: 1, source: "PW (Affordability)" },
+        "Data Handling": { q: "The mean of 4, 8, 12 is:", options: ["4", "8", "12", "24"], correct: 1, source: "Oswaal (Bulk Practice)" },
+        "Simple Equations": { q: "The solution of the equation x + 3 = 5 is:", options: ["2", "-2", "8", "-8"], correct: 0, source: "Arihant (Speed & Revision)" },
+        "Lines and Angles": { q: "The sum of two complementary angles is:", options: ["90°", "180°", "360°", "270°"], correct: 0, source: "Educart (Conceptual Mastery)" },
+        "The Triangle and its Properties": { q: "The sum of all interior angles of a triangle is:", options: ["90°", "180°", "270°", "360°"], correct: 1, source: "PW (Affordability)" },
+        "Congruence of Triangles": { q: "Two triangles are congruent if they have:", options: ["Same shape", "Same size", "Same shape and size", "Same angles"], correct: 2, source: "Oswaal (Bulk Practice)" },
+        "Comparing Quantities": { q: "If 20% of a number is 40, the number is:", options: ["80", "100", "200", "400"], correct: 2, source: "Arihant (Speed & Revision)" },
+        "Rational Numbers": { q: "The standard form of 18/-42 is:", options: ["-3/7", "9/-21", "3/-7", "-9/21"], correct: 0, source: "Educart (Conceptual Mastery)" },
+        "Practical Geometry": { q: "How many measurements are needed to construct a triangle?", options: ["2", "3", "4", "5"], correct: 1, source: "PW (Affordability)" },
+        "Perimeter and Area": { q: "The area of a square with side 5 cm is:", options: ["10 cm²", "20 cm²", "25 cm²", "15 cm²"], correct: 2, source: "Oswaal (Bulk Practice)" },
+        "Algebraic Expressions": { q: "The coefficient of x in 5x - 3 is:", options: ["5", "-3", "5x", "x"], correct: 0, source: "Arihant (Speed & Revision)" },
+        "Exponents and Powers": { q: "10^5 is equal to:", options: ["1000", "10000", "100000", "100"], correct: 2, source: "Educart (Conceptual Mastery)" },
+        "Symmetry": { q: "A regular hexagon has ____ lines of symmetry.", options: ["3", "4", "5", "6"], correct: 3, source: "PW (Affordability)" },
+        "Visualising Solid Shapes": { q: "How many faces does a cube have?", options: ["4", "6", "8", "12"], correct: 1, source: "Oswaal (Bulk Practice)" },
+        "Nutrition in Plants": { q: "Which pigment absorbs sunlight for photosynthesis?", options: ["Hemoglobin", "Chlorophyll", "Melanin", "Xanthophyll"], correct: 1, source: "Arihant (Speed & Revision)" },
+        "Nutrition in Animals": { q: "In amoeba, digestion takes place in:", options: ["Nucleus", "Food vacuole", "Pseudopodia", "Cytoplasm"], correct: 1, source: "Educart (Conceptual Mastery)" },
+        "Fibre to Fabric": { q: "Silk is obtained from:", options: ["Sheep", "Silkworm", "Goat", "Camel"], correct: 1, source: "PW (Affordability)" },
+        "Heat": { q: "Heat transfer in solids occurs by:", options: ["Convection", "Conduction", "Radiation", "Evaporation"], correct: 1, source: "Oswaal (Bulk Practice)" },
+        "Acids Bases and Salts": { q: "Lemon juice and vinegar taste:", options: ["Bitter", "Sweet", "Sour", "Salty"], correct: 2, source: "Arihant (Speed & Revision)" },
+        "Physical and Chemical Changes": { q: "Burning of paper is a:", options: ["Physical change", "Chemical change", "Both", "None"], correct: 1, source: "Educart (Conceptual Mastery)" },
+        "Weather Climate and Adaptations": { q: "The daily record of weather is called:", options: ["Climate", "Temperature", "Weather report", "Rainfall"], correct: 2, source: "PW (Affordability)" },
+        "Winds Storms and Cyclones": { q: "The center of a cyclone is called:", options: ["Ear", "Eye", "Neck", "Mouth"], correct: 1, source: "Oswaal (Bulk Practice)" },
+        "Soil": { q: "The top layer of soil is called:", options: ["Subsoil", "Bedrock", "Topsoil", "Humus"], correct: 2, source: "Arihant (Speed & Revision)" },
+        "Respiration in Organisms": { q: "Inhalation of air rich in oxygen is called:", options: ["Exhalation", "Respiration", "Inhalation", "Transpiration"], correct: 2, source: "Educart (Conceptual Mastery)" },
+        "Transportation in Animals and Plants": { q: "The pumping organ in our body is:", options: ["Stomach", "Heart", "Lungs", "Brain"], correct: 1, source: "PW (Affordability)" },
+        "Reproduction in Plants": { q: "The process by which seeds are dispersed by wind is called:", options: ["Hydrochory", "Anemochory", "Zoochory", "Autochory"], correct: 1, source: "Oswaal (Bulk Practice)" },
+        "Motion and Time": { q: "The basic unit of speed is:", options: ["m/s", "km/h", "s/m", "min/s"], correct: 0, source: "Arihant (Speed & Revision)" },
+        "Electric Current and Its Effects": { q: "A device used to make or break an electric circuit is:", options: ["Cell", "Switch", "Bulb", "Wire"], correct: 1, source: "Educart (Conceptual Mastery)" },
+        "Light": { q: "Image formed by a plane mirror is:", options: ["Real and inverted", "Virtual and erect", "Real and erect", "Virtual and inverted"], correct: 1, source: "PW (Affordability)" },
+        "Water: A Precious Resource": { q: "Which of the following is NOT a method to conserve water?", options: ["Rainwater harvesting", "Drip irrigation", "Leaking taps", "Closing taps while brushing"], correct: 2, source: "Oswaal (Bulk Practice)" },
+        "Forests: Our Lifeline": { q: "The roof of the forest formed by tall trees is called:", options: ["Canopy", "Understorey", "Forest floor", "Shrub layer"], correct: 0, source: "Arihant (Speed & Revision)" },
+        "Wastewater Story": { q: "Wastewater treatment involves:", options: ["Physical, Chemical, Biological processes", "Only physical", "Only chemical", "Only biological"], correct: 0, source: "Educart (Conceptual Mastery)" },
+        "Environment": { q: "What creates an ecosystem?", options: ["Only living things", "Only non-living things", "Interaction between living and non-living things", "Only animals"], correct: 2, source: "PW (Affordability)" },
+        "Inside Our Earth": { q: "The innermost layer of the earth is made of:", options: ["Granite", "Basalt", "Nickel and Iron", "Silica"], correct: 2, source: "Oswaal (Bulk Practice)" },
+        "Our Changing Earth": { q: "The movement of plates is caused by:", options: ["Heat and convection currents", "Wind", "Water", "Gravity"], correct: 0, source: "Arihant (Speed & Revision)" },
+        "Air": { q: "Which gas is essential for respiration?", options: ["Nitrogen", "Oxygen", "Carbon Dioxide", "Helium"], correct: 1, source: "Educart (Conceptual Mastery)" },
+        "Water": { q: "Ocean water is salty due to:", options: ["Rivers", "Volcanic eruptions", "Dissolved salts", "Evaporation"], correct: 2, source: "PW (Affordability)" },
+        "Natural Vegetation and Wild Life": { q: "Tropical Thorn Forests are found in areas with:", options: ["Heavy rainfall", "Moderate rainfall", "Low rainfall", "No rainfall"], correct: 2, source: "Oswaal (Bulk Practice)" },
+        "Human Environment Settlement Transport and Communication": { q: "Which is NOT a means of communication?", options: ["Telephone", "Internet", "Road", "Radio"], correct: 2, source: "Arihant (Speed & Revision)" },
+        "Human Environment Interaction The Tropical and the Subtropical Region": { q: "Which is the main crop of the Ganga-Brahmaputra basin?", options: ["Wheat", "Rice", "Cotton", "Sugarcane"], correct: 1, source: "Educart (Conceptual Mastery)" },
+        "Life in the Temperate Grasslands": { q: "The Prairies are located in:", options: ["South America", "Africa", "North America", "Australia"], correct: 2, source: "PW (Affordability)" },
+        "Life in the Deserts": { q: "Ladakh is a cold desert located in:", options: ["Jammu and Kashmir", "Rajasthan", "Gujarat", "Himachal Pradesh"], correct: 0, source: "Oswaal (Bulk Practice)" },
+        "Tracing Changes Through A Thousand Years": { q: "Which century is known as the medieval period in India?", options: ["1st to 5th", "7th to 18th", "19th to 20th", "20th to 21st"], correct: 1, source: "Arihant (Speed & Revision)" },
+        "New Kings and Kingdoms": { q: "Who was the founder of the Rashtrakuta dynasty?", options: ["Dantidurga", "Amoghavarsha", "Indra III", "Krishna I"], correct: 0, source: "Educart (Conceptual Mastery)" },
+        "The Delhi Sultans": { q: "Who was the first Sultan of Delhi?", options: ["Iltutmish", "Qutbuddin Aibak", "Razia Sultana", "Balban"], correct: 1, source: "PW (Affordability)" },
+        "The Mughal Empire": { q: "Which Mughal ruler fought the Battle of Khanwa?", options: ["Akbar", "Babur", "Humayun", "Jahangir"], correct: 1, source: "Oswaal (Bulk Practice)" },
+        "Rulers and Buildings": { q: "The Taj Mahal was built by:", options: ["Akbar", "Shah Jahan", "Jahangir", "Aurangzeb"], correct: 1, source: "Arihant (Speed & Revision)" },
+        "Towns Traders and Craftspersons": { q: "Which was the first English factory in India?", options: ["Madras", "Calcutta", "Surat", "Bombay"], correct: 2, source: "Educart (Conceptual Mastery)" },
+        "Tribals Dikus and the Vision of a Golden Age": { q: "Which movement was led by Birsa Munda?", options: ["Peasant Movement", "Munda Movement", "Forest Movement", "Revolt of 1857"], correct: 1, source: "PW (Affordability)" },
+        "Devotional Paths to the Divine": { q: "Which saint rejected major religious traditions like Vedas and sacrifices?", options: ["Kabir", "Ramanuja", "Shankaradeva", "Basant"], correct: 0, source: "Oswaal (Bulk Practice)" },
+        "The Making of Regional Cultures": { q: "Which dance form is associated with Kerala?", options: ["Kathakali", "Bharatanatyam", "Kuchipudi", "Odissi"], correct: 0, source: "Arihant (Speed & Revision)" },
+        "Eighteenth-Century Political Formations": { q: "Who founded the independent state of Hyderabad?", options: ["Nizam-ul-Mulk Asaf Jah", "Sa'adat Khan", "Murshid Quli Khan", "Alivardi Khan"], correct: 0, source: "Educart (Conceptual Mastery)" },
+        "On Equality": { q: "The Universal Declaration of Human Rights was adopted in:", options: ["1945", "1948", "1950", "1952"], correct: 1, source: "PW (Affordability)" },
+        "Role of the Government in Health": { q: "Which is a public health care facility?", options: ["Private clinic", "Nursing home", "Government hospital", "Dispensary"], correct: 2, source: "Oswaal (Bulk Practice)" },
+        "How the State Government Works": { q: "The head of the state is called:", options: ["Chief Minister", "Governor", "Chief Secretary", "President"], correct: 1, source: "Arihant (Speed & Revision)" },
+        "Growing up as Boys and Girls": { q: "The term 'Devi' is used for:", options: ["Goddess", "Demon", "King", "Saint"], correct: 0, source: "Educart (Conceptual Mastery)" },
+        "Women Change the World": { q: "Who was the first woman President of India?", options: ["Indira Gandhi", "Pratibha Patil", "Sarojini Naidu", "Sushma Swaraj"], correct: 1, source: "PW (Affordability)" },
+        "Understanding Media": { q: "What is 'mass media'?", options: ["Personal communication", "Means of communication reaching a large audience", "Classroom teaching", "Telegraph"], correct: 1, source: "Oswaal (Bulk Practice)" },
+        "Understanding Advertising": { q: "An advertisement aims to:", options: ["Inform only", "Persuade people to buy products", "Educate people", "Critique products"], correct: 1, source: "Arihant (Speed & Revision)" },
+        "Markets Around Us": { q: "A market where goods are sold directly to consumers is:", options: ["Wholesale market", "Retail market", "Weekly market", "Mall"], correct: 1, source: "Educart (Conceptual Mastery)" },
+        "A Shirt in the Market": { q: "Who puts the label on the shirt?", options: ["Weaver", "Exporter", "Businessman", "Merchant"], correct: 2, source: "PW (Affordability)" },
+        "Three Questions": { q: "Who wrote the story 'Three Questions'?", options: ["Leo Tolstoy", "Anton Chekhov", "Rabindranath Tagore", "William Wordsworth"], correct: 0, source: "Oswaal (Bulk Practice)" },
+        "A Gift of Chappals": { q: "What did Mr. Rama Rao give to the music master?", options: ["Chappals", "A mango", "Money", "A coconut"], correct: 0, source: "Arihant (Speed & Revision)" },
+        "Gopal and the Hilsa Fish": { q: "How did Gopal distract everyone from the fish?", options: ["By singing", "By dancing", "By dressing strangely", "By running"], correct: 2, source: "Educart (Conceptual Mastery)" },
+        "The Ashes That Made Trees Bloom": { q: "Who rewarded the old couple?", options: ["The dog", "The farmer", "The king", "A traveller"], correct: 2, source: "PW (Affordability)" },
+        "Chandni": { q: "Who was the owner of Chandni?", options: ["Abbu Khan", "The narrator", "A hunter", "A shepherd"], correct: 0, source: "Oswaal (Bulk Practice)" },
+        "The Bear Story": { q: "What did the lady think about the bear?", options: ["It was dangerous", "It was her son", "It was wild", "It was hungry"], correct: 1, source: "Arihant (Speed & Revision)" },
+        "A Tiger in the House": { q: "What was the name of the tiger?", options: ["Timothy", "Sheru", "Raja", "Tiger"], correct: 0, source: "Educart (Conceptual Mastery)" },
+        "The Alien Hand": { q: "Who is the author of 'The Alien Hand'?", options: ["Jayant Narlikar", "Isaac Asimov", "H.G. Wells", "Arthur C. Clarke"], correct: 0, source: "PW (Affordability)" },
+
+        // --- CLASS 8 ---
+        "Rational Numbers": { q: "The additive inverse of 3/7 is:", options: ["3/7", "-3/7", "7/3", "-7/3"], correct: 1, source: "Oswaal (Bulk Practice)" },
+        "Linear Equations in One Variable": { q: "Solve: 3x - 5 = 10. x = ?", options: ["3", "5", "15", "4"], correct: 1, source: "Arihant (Speed & Revision)" },
+        "Understanding Quadrilaterals": { q: "Sum of exterior angles of a polygon is:", options: ["180°", "360°", "540°", "(n-2) x 180°"], correct: 1, source: "Educart (Conceptual Mastery)" },
+        "Practical Geometry": { q: "To construct a quadrilateral, we need ____ independent measurements.", options: ["3", "4", "5", "6"], correct: 2, source: "PW (Affordability)" },
+        "Data Handling": { q: "A circle graph is also called:", options: ["Bar graph", "Pie chart", "Histogram", "Pictograph"], correct: 1, source: "Oswaal (Bulk Practice)" },
+        "Squares and Square Roots": { q: "Which of the following is a perfect square?", options: ["23", "25", "27", "29"], correct: 1, source: "Arihant (Speed & Revision)" },
+        "Cubes and Cube Roots": { q: "The cube root of 64 is:", options: ["2", "4", "8", "6"], correct: 1, source: "Educart (Conceptual Mastery)" },
+        "Comparing Quantities": { q: "If SP = 500 and Profit = 100, CP is:", options: ["400", "600", "300", "200"], correct: 0, source: "PW (Affordability)" },
+        "Algebraic Expressions and Identities": { q: "(a + b)(a - b) is equal to:", options: ["a^2 + b^2", "a^2 - b^2", "2ab", "a + b"], correct: 1, source: "Oswaal (Bulk Practice)" },
+        "Visualising Solid Shapes": { q: "A 2D shape of a 3D object is called:", options: ["Face", "Vertex", "Edge", "Net"], correct: 3, source: "Arihant (Speed & Revision)" },
+        "Mensuration": { q: "The area of a trapezium is:", options: ["(a+b) x h", "1/2(a+b) x h", "1/3(a+b) x h", "a x b"], correct: 1, source: "Educart (Conceptual Mastery)" },
+        "Exponents and Powers": { q: "(-2)^3 is equal to:", options: ["-6", "-8", "6", "8"], correct: 1, source: "PW (Affordability)" },
+        "Direct and Inverse Proportions": { q: "If x and y are in direct proportion, x/y = ?", options: ["0", "1", "k", "constant"], correct: 2, source: "Oswaal (Bulk Practice)" },
+        "Factorisation": { q: "Factorise: 3x^2 - 9x", options: ["3x(x-3)", "3x(x+3)", "x(3x-9)", "3(x^2-3)"], correct: 0, source: "Arihant (Speed & Revision)" },
+        "Introduction to Graphs": { q: "The x-coordinate is called:", options: ["Ordinate", "Abscissa", "Origin", "Quadrant"], correct: 1, source: "Educart (Conceptual Mastery)" },
+        "Playing with Numbers": { q: "The general form of a 2-digit number is:", options: ["10a + b", "a + 10b", "ab", "10b + a"], correct: 0, source: "PW (Affordability)" },
+        "Crop Production and Management": { q: "Which of the following is a Rabi crop?", options: ["Paddy", "Maize", "Wheat", "Bajra"], correct: 2, source: "Oswaal (Bulk Practice)" },
+        "Microorganisms: Friend and Foe": { q: "Yeast is used in the production of:", options: ["Sugar", "Alcohol", "Hydrochloric acid", "Oxygen"], correct: 1, source: "Arihant (Speed & Revision)" },
+        "Synthetic Fibres and Plastics": { q: "Polyester is a:", options: ["Natural fibre", "Synthetic fibre", "Metal", "Mineral"], correct: 1, source: "Educart (Conceptual Mastery)" },
+        "Materials: Metals and Non-Metals": { q: "Which of the following is a non-metal?", options: ["Iron", "Copper", "Sulphur", "Aluminum"], correct: 2, source: "PW (Affordability)" },
+        "Coal and Petroleum": { q: "Which is NOT a fossil fuel?", options: ["Coal", "Petroleum", "Natural Gas", "Biogas"], correct: 3, source: "Oswaal (Bulk Practice)" },
+        "Combustion and Flame": { q: "The lowest temperature at which a substance catches fire is its:", options: ["Ignition temperature", "Melting point", "Boiling point", "Freezing point"], correct: 0, source: "Arihant (Speed & Revision)" },
+        "Conservation of Plants and Animals": { q: "The area meant for the protection of wild animals is called:", options: ["Zoo", "Sanctuary", "Park", "Garden"], correct: 1, source: "Educart (Conceptual Mastery)" },
+        "Cell — Structure and Functions": { q: "The basic unit of life is:", options: ["Tissue", "Organ", "Cell", "Organism"], correct: 2, source: "PW (Affordability)" },
+        "Reproduction in Animals": { q: "The fusion of male and female gametes is called:", options: ["Fertilization", "Gestation", "Puberty", "Menstruation"], correct: 0, source: "Oswaal (Bulk Practice)" },
+        "Reaching the Age of Adolescence": { q: "Which hormone is responsible for secondary sexual characters in males?", options: ["Estrogen", "Testosterone", "Insulin", "Adrenaline"], correct: 1, source: "Arihant (Speed & Revision)" },
+        "Force and Pressure": { q: "The SI unit of force is:", options: ["Newton", "Joule", "Pascal", "Watt"], correct: 0, source: "Educart (Conceptual Mastery)" },
+        "Friction": { q: "Friction is:", options: ["Useful always", "Harmful always", "Both useful and harmful", "Neither"], correct: 2, source: "PW (Affordability)" },
+        "Sound": { q: "Sound cannot travel through:", options: ["Solids", "Liquids", "Gases", "Vacuum"], correct: 3, source: "Oswaal (Bulk Practice)" },
+        "Chemical Effects of Electric Current": { q: "The process of depositing a layer of metal on another metal using electricity is:", options: ["Electroplating", "Electrolysis", "Galvanisation", "Corrosion"], correct: 0, source: "Arihant (Speed & Revision)" },
+        "Some Natural Phenomena": { q: "Which device is used to protect buildings from lightning?", options: ["Conductor", "Insulator", "Lightning conductor", "Switch"], correct: 2, source: "Educart (Conceptual Mastery)" },
+        "Light": { q: "The splitting of white light into its components is called:", options: ["Reflection", "Refraction", "Dispersion", "Diffraction"], correct: 2, source: "PW (Affordability)" },
+        "Stars and The Solar System": { q: "Which planet is known as the 'Red Planet'?", options: ["Venus", "Jupiter", "Mars", "Saturn"], correct: 2, source: "Oswaal (Bulk Practice)" },
+        "Pollution of Air and Water": { q: "Which gas is the major component of air pollution?", options: ["Oxygen", "Nitrogen", "Carbon monoxide", "Hydrogen"], correct: 2, source: "Arihant (Speed & Revision)" },
+        "Resources": { q: "Resources that are inexhaustible are called:", options: ["Natural", "Renewable", "Non-renewable", "Human"], correct: 1, source: "Educart (Conceptual Mastery)" },
+        "Land Soil Water Natural Vegetation and Wildlife Resources": { q: "Black soil is also known as:", options: ["Alluvial soil", "Regur soil", "Laterite soil", "Arid soil"], correct: 1, source: "PW (Affordability)" },
+        "Mineral and Power Resources": { q: "Which mineral is used to make electric wires?", options: ["Copper", "Aluminum", "Gold", "Both A and B"], correct: 3, source: "Oswaal (Bulk Practice)" },
+        "Agriculture": { q: "Which type of farming is practiced in areas of high rainfall?", options: ["Subsistence farming", "Commercial farming", "Intensive subsistence farming", "Shifting cultivation"], correct: 2, source: "Arihant (Speed & Revision)" },
+        "Industries": { q: "The 'Silicon Valley' of India is located in:", options: ["Bangalore", "Hyderabad", "Chennai", "Noida"], correct: 0, source: "Educart (Conceptual Mastery)" },
+        "Human Resources": { q: "The most abundant resource on earth is:", options: ["Minerals", "Forests", "People", "Water"], correct: 2, source: "PW (Affordability)" },
+        "How When and Where": { q: "Who introduced the periodisation of Indian History?", options: ["James Mill", "James Prinsep", "William Jones", "Max Muller"], correct: 0, source: "Oswaal (Bulk Practice)" },
+        "From Trade to Territory": { q: "The last powerful Mughal ruler was:", options: ["Akbar", "Aurangzeb", "Shah Jahan", "Babur"], correct: 1, source: "Arihant (Speed & Revision)" },
+        "Ruling the Countryside": { q: "The Permanent Settlement was introduced in:", options: ["1793", "1795", "1800", "1810"], correct: 0, source: "Educart (Conceptual Mastery)" },
+        "Tribals Dikus and the Vision of a Golden Age": { q: "The Khonds were a tribe from:", options: ["Odisha", "Jharkhand", "Chhattisgarh", "Madhya Pradesh"], correct: 0, source: "PW (Affordability)" },
+        "When People Rebel": { q: "Who led the Revolt of 1857 in Kanpur?", options: ["Rani Lakshmibai", "Nana Saheb", "Bahadur Shah Zafar", "Tatya Tope"], correct: 1, source: "Oswaal (Bulk Practice)" },
+        "Colonialism and the City": { q: "Which city was developed by the British as a presidency city?", options: ["Madras", "Bombay", "Calcutta", "All of the above"], correct: 3, source: "Arihant (Speed & Revision)" },
+        "Weavers Iron Smelters and Factory Owners": { q: "The first cotton mill in India was set up in:", options: ["Bombay", "Calcutta", "Ahmedabad", "Kanpur"], correct: 0, source: "Educart (Conceptual Mastery)" },
+        "Civilising the Native Educating the Nation": { q: "The Macaulay Minute was about:", options: ["Social reforms", "Education policy", "Land revenue", "Judicial system"], correct: 1, source: "PW (Affordability)" },
+        "Women Caste and Reform": { q: "Who started the Satya Shodhak Samaj?", options: ["Jyotirao Phule", "B.R. Ambedkar", "Raja Ram Mohan Roy", "Ishwar Chandra Vidyasagar"], correct: 0, source: "Oswaal (Bulk Practice)" },
+        "The Changing World of Visual Arts": { q: "Raja Ravi Varma was a famous:", options: ["Writer", "Painter", "Musician", "Sculptor"], correct: 1, source: "Arihant (Speed & Revision)" },
+        "The Making of the National Movement 1870s-1947": { q: "Who started the Civil Disobedience Movement?", options: ["Subhas Chandra Bose", "Mahatma Gandhi", "Jawaharlal Nehru", "Sardar Patel"], correct: 1, source: "Educart (Conceptual Mastery)" },
+        "India After Independence": { q: "When was the Constitution of India adopted?", options: ["1947", "1950", "1952", "1949"], correct: 3, source: "PW (Affordability)" },
+        "The Indian Constitution": { q: "The Constitution of India begins with:", options: ["The Preamble", "Fundamental Rights", "Directive Principles", "Union Territories"], correct: 0, source: "Oswaal (Bulk Practice)" },
+        "Understanding Secularism": { q: "In a secular state, the state does not:", options: ["Have a religion", "Protect minorities", "Treat all religions equally", "Allow freedom of religion"], correct: 0, source: "Arihant (Speed & Revision)" },
+        "Why Do We Need a Parliament": { q: "Parliament enables citizens to hold the government:", options: ["Responsible", "Irresponsible", "Powerful", "Weak"], correct: 0, source: "Educart (Conceptual Mastery)" },
+        "Understanding Laws": { q: "A law against domestic violence was passed in:", options: ["2005", "2000", "1995", "2010"], correct: 0, source: "PW (Affordability)" },
+        "Judiciary": { q: "The Supreme Court is located in:", options: ["Mumbai", "Chennai", "Kolkata", "New Delhi"], correct: 3, source: "Oswaal (Bulk Practice)" },
+        "Understanding Our Criminal Justice System": { q: "Who files an FIR?", options: ["Police", "Judge", "Victim", "Lawyer"], correct: 0, source: "Arihant (Speed & Revision)" },
+        "Understanding Marginalisation": { q: "Adivasis are:", options: ["Rich farmers", "Indigenous people", "Urban poor", "Businessmen"], correct: 1, source: "Educart (Conceptual Mastery)" },
+        "Confronting Marginalisation": { q: "Which Article of the Constitution prohibits untouchability?", options: ["14", "15", "16", "17"], correct: 3, source: "PW (Affordability)" },
+        "Public Facilities": { q: "Which is a public facility?", options: ["Private car", "Tap water", "Mobile phone", "Laptop"], correct: 1, source: "Oswaal (Bulk Practice)" },
+        "Law and Social Justice": { q: "Which act was passed to protect the environment?", options: ["Environment Protection Act, 1986", "Water Act, 1974", "Air Act, 1981", "All of the above"], correct: 3, source: "Arihant (Speed & Revision)" },
+        "The Best Christmas Present in the World": { q: "Who wrote the letter to Connie?", options: ["Jim", "Hans Wolf", "The author", "A soldier"], correct: 2, source: "Educart (Conceptual Mastery)" },
+        "The Ant and the Cricket": { q: "What did the cricket do in summer?", options: ["Worked hard", "Sang and danced", "Stored food", "Migrated"], correct: 1, source: "PW (Affordability)" },
+        "The Tsunami": { q: "Who saved Meghna?", options: ["A boat", "A floating log", "Her mother", "A dolphin"], correct: 1, source: "Oswaal (Bulk Practice)" },
+        "Geography Lesson": { q: "Who is the poet of 'Geography Lesson'?", options: ["Zulfikar Ghose", "Ruskin Bond", "Robert Frost", "Walt Whitman"], correct: 0, source: "Arihant (Speed & Revision)" },
+        "Glimpses of the Past": { q: "When did the Battle of Plassey take place?", options: ["1757", "1764", "1857", "1947"], correct: 0, source: "Educart (Conceptual Mastery)" },
+        "Bepin Choudhury’s Lapse of Memory": { q: "What was Bepin Babu suffering from?", options: ["Amnesia", "Fever", "Depression", "Prank"], correct: 3, source: "PW (Affordability)" },
+        "The Summit Within": { q: "Who is the author of 'The Summit Within'?", options: ["H.P.S. Ahluwalia", "Jon Krakauer", "Tenzing Norgay", "Edmund Hillary"], correct: 0, source: "Oswaal (Bulk Practice)" },
+        "A Visit to Cambridge": { q: "Where is Cambridge located?", options: ["USA", "UK", "France", "Germany"], correct: 1, source: "Arihant (Speed & Revision)" },
+        "The Great Stone Face I": { q: "What did Ernest wish to see?", options: ["The king", "The prophecy", "The Stone Face", "A gold mine"], correct: 2, source: "Educart (Conceptual Mastery)" },
+        "The Great Stone Face II": { q: "Who turned out to be the Great Stone Face?", options: ["Ernest", "Gathergold", "The General", "Ernest himself"], correct: 3, source: "PW (Affordability)" },
+
+        // --- CLASS 9 (Additional/Gaps) ---
+        "Number Systems": { q: "Which of the following is an irrational number?", options: ["2.5", "0.101001000...", "1.234", "3.14"], correct: 1, source: "Educart (Conceptual Mastery)" },
+        "Polynomials": { q: "The coefficient of x^2 in 2x^3 - 3x^2 + 5 is:", options: ["2", "-3", "5", "0"], correct: 1, source: "Arihant (Speed & Revision)" },
+        "Coordinate Geometry": { q: "The point (0, -5) lies on:", options: ["x-axis", "y-axis", "Origin", "None"], correct: 1, source: "PW (Affordability)" },
+        "Linear Equations in Two Variables": { q: "x = 3, y = 2 is a solution of:", options: ["x + y = 5", "x - y = 1", "Both A and B", "Neither"], correct: 2, source: "Oswaal (Bulk Practice)" },
+        "Introduction to Euclid’s Geometry": { q: "A solid has:", options: ["Length, breadth, thickness", "Length and breadth only", "Breadth and thickness only", "Length only"], correct: 0, source: "Educart (Conceptual Mastery)" },
+        "Lines and Angles": { q: "If two lines intersect, the vertically opposite angles are:", options: ["Equal", "Supplementary", "Complementary", "Unequal"], correct: 0, source: "Arihant (Speed & Revision)" },
+        "Triangles": { q: "In a triangle, the sum of the angles is:", options: ["90°", "180°", "270°", "360°"], correct: 1, source: "PW (Affordability)" },
+        "Quadrilaterals": { q: "The diagonals of a rhombus are:", options: ["Equal", "Unequal", "Perpendicular", "Both A and C"], correct: 3, source: "Oswaal (Bulk Practice)" },
+        "Areas of Parallelograms and Triangles": { q: "Two congruent triangles have:", options: ["Equal area", "Equal perimeter", "Both A and B", "None"], correct: 0, source: "Educart (Conceptual Mastery)" },
+        "Circles": { q: "The longest chord of a circle is:", options: ["Radius", "Diameter", "Arc", "Sector"], correct: 1, source: "Arihant (Speed & Revision)" },
+        "Constructions": { q: "The angle bisector of an angle is:", options: ["A line", "A ray", "A segment", "A point"], correct: 1, source: "PW (Affordability)" },
+        "Heron’s Formula": { q: "The area of a triangle with sides 3cm, 4cm, 5cm is:", options: ["6 cm²", "12 cm²", "10 cm²", "8 cm²"], correct: 0, source: "Oswaal (Bulk Practice)" },
+        "Surface Areas and Volumes": { q: "The surface area of a cube of side 'a' is:", options: ["a^2", "6a^2", "4a^2", "a^3"], correct: 1, source: "Educart (Conceptual Mastery)" },
+        "Statistics": { q: "The mid-point of a class interval is called:", options: ["Class mark", "Class size", "Class limit", "Frequency"], correct: 0, source: "Arihant (Speed & Revision)" },
+        "Probability": { q: "The probability of an impossible event is:", options: ["0", "1", "0.5", "1.5"], correct: 0, source: "PW (Affordability)" },
+        "Motion": { q: "If the velocity of an object is constant, its acceleration is:", options: ["Positive", "Negative", "Zero", "Infinite"], correct: 2, source: "Oswaal (Bulk Practice)" },
+        "Force and Laws of Motion": { q: "Inertia is:", options: ["Force", "Momentum", "Property of body", "Energy"], correct: 2, source: "Educart (Conceptual Mastery)" },
+        "Gravitation": { q: "The value of 'g' is maximum at:", options: ["The center of the earth", "The poles", "The equator", "High altitude"], correct: 1, source: "Arihant (Speed & Revision)" },
+        "Work and Energy": { q: "1 Watt is equal to:", options: ["1 Nm/s", "1 J/s", "1 Ns", "1 J"], correct: 1, source: "PW (Affordability)" },
+        "Sound": { q: "Which is required for the propagation of sound?", options: ["Solid", "Liquid", "Gas", "Medium"], correct: 3, source: "Oswaal (Bulk Practice)" },
+        "Matter in Our Surroundings": { q: "Which state of matter has the least intermolecular force?", options: ["Solid", "Liquid", "Gas", "Plasma"], correct: 2, source: "Educart (Conceptual Mastery)" },
+        "Is Matter Around Us Pure": { q: "A mixture of salt and water can be separated by:", options: ["Filtration", "Distillation", "Chromatography", "Handpicking"], correct: 1, source: "Arihant (Speed & Revision)" },
+        "Atoms and Molecules": { q: "The number of atoms in 0.1 mole of a triatomic gas is:", options: ["6.022 x 10^22", "1.806 x 10^23", "3.600 x 10^23", "1.204 x 10^23"], correct: 1, source: "PW (Affordability)" },
+        "Structure of the Atom": { q: "The maximum number of electrons in K shell is:", options: ["2", "8", "18", "32"], correct: 0, source: "Oswaal (Bulk Practice)" },
+        "The Fundamental Unit of Life": { q: "Who discovered the cell?", options: ["Robert Hooke", "Robert Brown", "Leeuwenhoek", "Schleiden"], correct: 0, source: "Educart (Conceptual Mastery)" },
+        "Tissues": { q: "Xylem is responsible for:", options: ["Transport of water", "Transport of food", "Storage", "Support"], correct: 0, source: "Arihant (Speed & Revision)" },
+        "Diversity in Living Organisms": { q: "Which class has organisms with a notochord?", options: ["Pisces", "Amphibia", "Chordata", "Mammalia"], correct: 2, source: "PW (Affordability)" },
+        "Why Do We Fall Ill": { q: "Which disease is caused by a virus?", options: ["Cholera", "Tuberculosis", "Common Cold", "Typhoid"], correct: 2, source: "Oswaal (Bulk Practice)" },
+        "Natural Resources": { q: "Oxygen cycle involves:", options: ["Respiration and photosynthesis", "Respiration only", "Photosynthesis only", "Combustion only"], correct: 0, source: "Educart (Conceptual Mastery)" },
+        "Improvement in Food Resources": { q: "Which method is used to improve crop yield?", options: ["Crop rotation", "Mixed cropping", "Intercropping", "All of the above"], correct: 3, source: "Arihant (Speed & Revision)" },
+        "The French Revolution": { q: "Which estate paid taxes to the state in France before the revolution?", options: ["First Estate", "Second Estate", "Third Estate", "All Estates"], correct: 2, source: "Oswaal (Bulk Practice)" },
+        "Socialism in Europe and the Russian Revolution": { q: "In Russia, the revolution of 1917 was led by:", options: ["Lenin", "Stalin", "Tsar Nicholas II", "Kerensky"], correct: 0, source: "Educart (Conceptual Mastery)" },
+        "Nazism and the Rise of Hitler": { q: "Which political party came to power in Germany in 1933?", options: ["Communist Party", "Nazi Party", "Social Democratic Party", "Labour Party"], correct: 1, source: "PW (Affordability)" },
+        "Forest Society and Colonialism": { q: "The 'Dunkel Man' were associated with:", options: ["Java", "Bastar", "Kalangs", "None"], correct: 1, source: "Oswaal (Bulk Practice)" },
+        "Pastoralists in the Modern World": { q: "Maasai cattle herders are found in:", options: ["Africa", "India", "America", "Australia"], correct: 0, source: "Educart (Conceptual Mastery)" },
+        "Peasants and Farmers": { q: "The British forced the farmers to grow:", options: ["Wheat", "Rice", "Indigo", "Sugarcane"], correct: 2, source: "Arihant (Speed & Revision)" },
+        "History and Sport: The Story of Cricket": { q: "Where was the first Indian Cricket Club established?", options: ["Bombay", "Calcutta", "Madras", "Pune"], correct: 0, source: "PW (Affordability)" },
+        "Clothing: A Social History": { q: "Who wore the Shanar cap?", options: ["Women of Shanar caste", "Women of Nair caste", "Men of Shanar caste", "Men of Nair caste"], correct: 0, source: "Oswaal (Bulk Practice)" },
+        "India Size and Location": { q: "Which latitude divides India into almost two equal parts?", options: ["Equator", "Tropic of Cancer", "Tropic of Capricorn", "Prime Meridian"], correct: 1, source: "Educart (Conceptual Mastery)" },
+        "Physical Features of India": { q: "The Himalayas are an example of which type of mountains?", options: ["Block Mountains", "Fold Mountains", "Volcanic Mountains", "Residual Mountains"], correct: 1, source: "Arihant (Speed & Revision)" },
+        "Drainage": { q: "The river Indus originates in:", options: ["Mansarovar Lake", "Gangotri Glacier", "Yamunotri Glacier", "Amarkantak"], correct: 0, source: "PW (Affordability)" },
+        "Climate": { q: "Which winds bring rainfall to the Ganga plains from June to September?", options: ["North-east monsoon", "South-west monsoon", "Western disturbances", "Trade winds"], correct: 1, source: "Oswaal (Bulk Practice)" },
+        "Natural Vegetation and Wild Life": { q: "Tropical Evergreen forests are found in areas receiving rainfall over:", options: ["50 cm", "100 cm", "200 cm", "300 cm"], correct: 2, source: "Educart (Conceptual Mastery)" },
+        "Population": { q: "The state with the highest population in India is:", options: ["Maharashtra", "Uttar Pradesh", "Bihar", "West Bengal"], correct: 1, source: "Arihant (Speed & Revision)" },
+        "What is Democracy Why Democracy": { q: "Democracy improves the quality of decision making because:", options: ["Decisions are taken quickly", "Decisions follow proper procedures", "Only one person decides", "The military decides"], correct: 1, source: "PW (Affordability)" },
+        "Constitutional Design": { q: "Who was the Chairman of the Drafting Committee of the Indian Constitution?", options: ["Jawaharlal Nehru", "B.R. Ambedkar", "Dr. Rajendra Prasad", "Mahatma Gandhi"], correct: 1, source: "Oswaal (Bulk Practice)" },
+        "Electoral Politics": { q: "What is the minimum age required to vote in India?", options: ["18 years", "21 years", "25 years", "16 years"], correct: 0, source: "Educart (Conceptual Mastery)" },
+        "Working of Institutions": { q: "Which institution takes policy decisions for the government?", options: ["Civil Servants", "The Cabinet", "Judiciary", "Parliament"], correct: 1, source: "Arihant (Speed & Revision)" },
+        "Democratic Rights": { q: "Which right is available to citizens against the arbitrary arrest?", options: ["Right to Equality", "Right to Freedom", "Right against Exploitation", "Cultural and Educational Rights"], correct: 1, source: "PW (Affordability)" },
+        "The Story of Village Palampur": { q: "Which is the main production activity in Palampur?", options: ["Farming", "Small-scale manufacturing", "Dairy", "Transport"], correct: 0, source: "Oswaal (Bulk Practice)" },
+        "People as Resource": { q: "Investment in human capital yields:", options: ["Short term gains", "High returns in the future", "No returns", "Negative returns"], correct: 1, source: "Educart (Conceptual Mastery)" },
+        "Poverty as a Challenge": { q: "Which of the following is a major cause of poverty in India?", options: ["Low level of economic development", "High population growth", "Unequal distribution of wealth", "All of the above"], correct: 3, source: "Arihant (Speed & Revision)" },
+        "Food Security in India": { q: "Which is the most important component of food security in India?", options: ["Availability", "Accessibility", "Affordability", "All of the above"], correct: 3, source: "PW (Affordability)" },
+        "The Fun They Had": { q: "Who is the author of 'The Fun They Had'?", options: ["Isaac Asimov", "Ray Bradbury", "H.G. Wells", "Jules Verne"], correct: 0, source: "Oswaal (Bulk Practice)" },
+        "The Sound of Music": { q: "Who is the author of 'The Sound of Music'?", options: ["Deborah Cowley", "Robert Frost", "Oscar Wilde", "Walt Whitman"], correct: 0, source: "Educart (Conceptual Mastery)" },
+        "The Little Girl": { q: "Who is the author of 'The Little Girl'?", options: ["Katherine Mansfield", "Virginia Woolf", "Jane Austen", "Charlotte Bronte"], correct: 0, source: "Arihant (Speed & Revision)" },
+        "A Truly Beautiful Mind": { q: "Who is the biography about?", options: ["Albert Einstein", "Isaac Newton", "Stephen Hawking", "Galileo Galilei"], correct: 0, source: "PW (Affordability)" },
+        "The Snake and the Mirror": { q: "Who wrote 'The Snake and the Mirror'?", options: ["Vaikom Muhammad Basheer", "R.K. Narayan", "Mulk Raj Anand", "Ruskin Bond"], correct: 0, source: "Oswaal (Bulk Practice)" },
+        "My Childhood": { q: "Who wrote 'My Childhood'?", options: ["A.P.J. Abdul Kalam", "Nelson Mandela", "Mahatma Gandhi", "Jawaharlal Nehru"], correct: 0, source: "Educart (Conceptual Mastery)" },
+        "Packing": { q: "Who wrote 'Packing'?", options: ["Jerome K. Jerome", "R.K. Narayan", "Ruskin Bond", "O. Henry"], correct: 0, source: "Arihant (Speed & Revision)" },
+        "Reach for the Top": { q: "Who reached the summit of Mount Everest?", options: ["Santosh Yadav", "Maria Sharapova", "Bachendri Pal", "Arunima Sinha"], correct: 0, source: "PW (Affordability)" },
+        "The Bond of Love": { q: "Who wrote 'The Bond of Love'?", options: ["Kenneth Anderson", "Jim Corbett", "Ruskin Bond", "R.K. Narayan"], correct: 2, source: "Oswaal (Bulk Practice)" },
+        "Kathmandu": { q: "Who wrote 'Kathmandu'?", options: ["Vikram Seth", "Ruskin Bond", "Khushwant Singh", "Amitav Ghosh"], correct: 0, source: "Educart (Conceptual Mastery)" },
+        "If I Were You": { q: "Who is the intruder in the story?", options: ["Gerrard", "The Vicar", "A Sergeant", "A robber"], correct: 1, source: "Arihant (Speed & Revision)" },
+
+        // --- CLASS 10 (Additional/Gaps) ---
+        "Real Numbers": { q: "The decimal expansion of pi is:", options: ["Terminating", "Non-terminating Repeating", "Non-terminating Non-repeating", "None"], correct: 2, source: "Oswaal (Bulk Practice)" },
+        "Polynomials": { q: "The number of zeroes of the polynomial x^2 + 4x + 2 is:", options: ["0", "1", "2", "3"], correct: 2, source: "Educart (Conceptual Mastery)" },
+        "Pair of Linear Equations in Two Variables": { q: "The graph of y = x is a:", options: ["Straight line", "Parabola", "Circle", "Ellipse"], correct: 0, source: "Arihant (Speed & Revision)" },
+        "Quadratic Equations": { q: "Which of the following is a quadratic equation?", options: ["x + 1/x = 2", "x^2 - 3x + 2 = 0", "x^3 - 6x = 0", "x + 1 = 0"], correct: 1, source: "PW (Affordability)" },
+        "Arithmetic Progressions": { q: "The 10th term of the AP 2, 7, 12... is:", options: ["45", "47", "49", "51"], correct: 1, source: "Oswaal (Bulk Practice)" },
+        "Triangles": { q: "If in two triangles, corresponding angles are equal, the triangles are:", options: ["Equilateral", "Isosceles", "Similar", "Congruent"], correct: 2, source: "Educart (Conceptual Mastery)" },
+        "Coordinate Geometry": { q: "The distance of point (3, 4) from the origin is:", options: ["3", "4", "5", "7"], correct: 2, source: "Arihant (Speed & Revision)" },
+        "Introduction to Trigonometry": { q: "If sin A = 1/2, then A is:", options: ["30°", "45°", "60°", "90°"], correct: 0, source: "PW (Affordability)" },
+        "Some Applications of Trigonometry": { q: "A ladder leaning against a wall makes an angle of:", options: ["0°", "30°", "90°", "180°"], correct: 2, source: "Oswaal (Bulk Practice)" },
+        "Circles": { q: "The number of tangents that can be drawn from an external point to a circle is:", options: ["1", "2", "3", "0"], correct: 1, source: "Educart (Conceptual Mastery)" },
+        "Constructions": { q: "To divide a line segment in the ratio m:n, we use:", options: ["Angle bisector", "Parallel lines", "Perpendicular bisector", "All of the above"], correct: 1, source: "Arihant (Speed & Revision)" },
+        "Areas Related to Circles": { q: "If the circumference of a circle is 176 cm, then its radius is:", options: ["14 cm", "28 cm", "7 cm", "21 cm"], correct: 1, source: "PW (Affordability)" },
+        "Surface Areas and Volumes": { q: "The volume of a sphere of radius r is:", options: ["4/3 πr^2", "4/3 πr^3", "4πr^2", "4πr^3"], correct: 1, source: "Oswaal (Bulk Practice)" },
+        "Statistics": { q: "The mode of the data 1, 2, 2, 3, 3, 3, 4 is:", options: ["1", "2", "3", "4"], correct: 2, source: "Educart (Conceptual Mastery)" },
+        "Probability": { q: "The probability of getting a head in tossing a coin is:", options: ["0", "1", "1/2", "2"], correct: 2, source: "Arihant (Speed & Revision)" },
+        "Light Reflection and Refraction": { q: "The focal length of a convex mirror is:", options: ["Positive", "Negative", "Zero", "Infinity"], correct: 0, source: "PW (Affordability)" },
+        "Human Eye and Colourful World": { q: "The least distance of distinct vision is:", options: ["25 cm", "25 m", "2.5 cm", "2.5 m"], correct: 0, source: "Oswaal (Bulk Practice)" },
+        "Electricity": { q: "The SI unit of resistance is:", options: ["Ampere", "Volt", "Ohm", "Coulomb"], correct: 2, source: "Educart (Conceptual Mastery)" },
+        "Magnetic Effects of Electric Current": { q: "A current carrying conductor produces:", options: ["Electric field", "Magnetic field", "Gravitational field", "Nuclear field"], correct: 1, source: "Arihant (Speed & Revision)" },
+        "Sources of Energy": { q: "Which is a renewable source of energy?", options: ["Coal", "Petroleum", "Solar energy", "Natural gas"], correct: 2, source: "PW (Affordability)" },
+        "Chemical Reactions and Equations": { q: "Rusting of iron is an example of:", options: ["Combination Reaction", "Decomposition Reaction", "Oxidation Reaction", "Displacement Reaction"], correct: 2, source: "Oswaal (Bulk Practice)" },
+        "Acids Bases and Salts": { q: "pH of pure water is:", options: ["0", "7", "14", "1"], correct: 1, source: "Educart (Conceptual Mastery)" },
+        "Metals and Non-metals": { q: "Which metal is stored in kerosene oil?", options: ["Copper", "Aluminum", "Sodium", "Gold"], correct: 2, source: "Arihant (Speed & Revision)" },
+        "Carbon and its Compounds": { q: "The number of covalent bonds in ethane is:", options: ["5", "6", "7", "8"], correct: 2, source: "PW (Affordability)" },
+        "Periodic Classification of Elements": { q: "Elements in the Modern Periodic Table are arranged in order of:", options: ["Atomic mass", "Atomic number", "Valency", "Valence electrons"], correct: 1, source: "Oswaal (Bulk Practice)" },
+        "Life Processes": { q: "In amoeba, food is digested in:", options: ["Food Vacuole", "Nucleus", "Pseudopodia", "Cytoplasm"], correct: 0, source: "Educart (Conceptual Mastery)" },
+        "Control and Coordination": { q: "Which part of the brain controls involuntary actions?", options: ["Cerebrum", "Cerebellum", "Medulla", "None"], correct: 2, source: "Arihant (Speed & Revision)" },
+        "How do Organisms Reproduce": { q: "Vegetative propagation in potato takes place by:", options: ["Leaf", "Stem", "Root", "Seed"], correct: 1, source: "PW (Affordability)" },
+        "Heredity and Evolution": { q: "Mendel's experiments were conducted on:", options: ["Pea plant", "Fruit fly", "Neem tree", "Mustard plant"], correct: 0, source: "Oswaal (Bulk Practice)" },
+        "Our Environment": { q: "Which of the following is a biodegradable waste?", options: ["Plastic", "Paper", "Glass", "Metal"], correct: 1, source: "Educart (Conceptual Mastery)" },
+        "Management of Natural Resources": { q: "Chipko Movement is associated with:", options: ["Water conservation", "Forest conservation", "Air pollution", "Soil erosion"], correct: 1, source: "Arihant (Speed & Revision)" },
+        "The Rise of Nationalism in Europe": { q: "Who was the founder of the Young Italy movement?", options: ["Mazzini", "Cavour", "Garibaldi", "Victor Emmanuel II"], correct: 0, source: "PW (Affordability)" },
+        "Nationalism in India": { q: "Who was the leader of the Peasant Movement in Awadh?", options: ["Jawaharlal Nehru", "Mahatma Gandhi", "Baba Ramchandra", "Subhas Chandra Bose"], correct: 2, source: "Oswaal (Bulk Practice)" },
+        "The Making of a Global World": { q: "The Great Depression began in:", options: ["1929", "1939", "1914", "1945"], correct: 0, source: "Educart (Conceptual Mastery)" },
+        "The Age of Industrialisation": { q: "Who invented the Spinning Jenny?", options: ["James Hargreaves", "James Watt", "Richard Arkwright", "Samuel Crompton"], correct: 0, source: "Arihant (Speed & Revision)" },
+        "Print Culture and the Modern World": { q: "The first printed book in Japan was:", options: ["Bible", "Diamond Sutra", "Ukiyo", "Newspaper"], correct: 1, source: "PW (Affordability)" },
+        "Resources and Development": { q: "Resources which are found in nature and are developed without human interference are called:", options: ["Human Made", "Natural", "Biotic", "Abiotic"], correct: 1, source: "Oswaal (Bulk Practice)" },
+        "Forest and Wildlife Resources": { q: "Which type of forest is found in the Ganga-Brahmaputra delta?", options: ["Thorn forests", "Mangrove forests", "Montane forests", "Tropical deciduous forests"], correct: 1, source: "Educart (Conceptual Mastery)" },
+        "Water Resources": { q: "The world's largest dam is:", options: ["Bhakra Nangal", "Hoover Dam", "Three Gorges Dam", "Aswan Dam"], correct: 2, source: "Arihant (Speed & Revision)" },
+        "Agriculture": { q: "Which type of farming is practiced in the arid and semi-arid regions?", options: ["Intensive farming", "Dry farming", "Wet farming", "Plantation agriculture"], correct: 1, source: "PW (Affordability)" },
+        "Minerals and Energy Resources": { q: "Which mineral is the backbone of industrial development?", options: ["Iron ore", "Copper", "Mica", "Bauxite"], correct: 0, source: "Oswaal (Bulk Practice)" },
+        "Manufacturing Industries": { q: "Which industry uses limestone as raw material?", options: ["Iron and steel", "Cement", "Aluminum", "Sugar"], correct: 1, source: "Educart (Conceptual Mastery)" },
+        "Lifelines of National Economy": { q: "The Golden Quadrilateral connects:", options: ["Delhi-Mumbai-Chennai-Kolkata", "Delhi-Lucknow-Patna-Kolkata", "Mumbai-Bangalore-Chennai-Hyderabad", "Ahmedabad-Vadodara-Surat-Rajkot"], correct: 0, source: "Arihant (Speed & Revision)" },
+        "Power Sharing": { q: "Community government in Belgium is elected by:", options: ["One community", "Both communities", "The King", "The President"], correct: 1, source: "PW (Affordability)" },
+        "Federalism": { q: "Panchayati Raj is an example of:", options: ["One-tier system", "Two-tier system", "Three-tier system", "Four-tier system"], correct: 2, source: "Oswaal (Bulk Practice)" },
+        "Democracy and Diversity": { q: "Who raised the Black Power slogan?", options: ["Martin Luther King", "Nelson Mandela", "Malcolm X", "Barack Obama"], correct: 2, source: "Educart (Conceptual Mastery)" },
+        "Gender Religion and Caste": { q: "In India, what percentage of seats are reserved for women in local bodies?", options: ["33%", "50%", "25%", "20%"], correct: 0, source: "Arihant (Speed & Revision)" },
+        "Popular Struggles and Movements": { q: "Nepal Movement was aimed at:", options: ["Restoring democracy", "Separation from India", "Free education", "Right to food"], correct: 0, source: "PW (Affordability)" },
+        "Political Parties": { q: "Which party in the USA is called 'Grand Old Party'?", options: ["Democrats", "Republicans", "Labour Party", "Green Party"], correct: 0, source: "Oswaal (Bulk Practice)" },
+        "Outcomes of Democracy": { q: "The most common form of democracy is:", options: ["Direct democracy", "Representative democracy", "Military democracy", "Monarchy"], correct: 1, source: "Educart (Conceptual Mastery)" },
+        "Challenges to Democracy": { q: "Which is not a challenge to democracy?", options: ["Foundational challenge", "Challenge of expansion", "Deepening of democracy", "Dictatorship"], correct: 3, source: "Arihant (Speed & Revision)" },
+        "Development": { q: "Which parameter is used to compare the development of different countries?", options: ["Income", "Health", "Education", "Human Development Index"], correct: 3, source: "PW (Affordability)" },
+        "Sectors of the Indian Economy": { q: "Which sector includes agriculture and fishing?", options: ["Primary", "Secondary", "Tertiary", "Quaternary"], correct: 0, source: "Oswaal (Bulk Practice)" },
+        "Money and Credit": { q: "What keeps the money flowing between lenders and borrowers?", options: ["Gold", "Credit", "Land", "Labor"], correct: 1, source: "Educart (Conceptual Mastery)" },
+        "Globalisation and the Indian Economy": { q: "MNC stands for:", options: ["Multi National Corporation", "Multi National Company", "Multi National Centre", "Main National Corporation"], correct: 0, source: "Arihant (Speed & Revision)" },
+        "Consumer Rights": { q: "When is 'National Consumer Day' observed in India?", options: ["December 24", "March 15", "January 26", "August 15"], correct: 0, source: "PW (Affordability)" },
+        "A Letter to God": { q: "Who wrote 'A Letter to God'?", options: ["Leo Tolstoy", "G.L. Fuentes", "Ruskin Bond", "O. Henry"], correct: 1, source: "Oswaal (Bulk Practice)" },
+        "Nelson Mandela Long Walk to Freedom": { q: "Which autobiography is 'Nelson Mandela: Long Walk to Freedom'?", options: ["Nelson Mandela", "Mahatma Gandhi", "Martin Luther King Jr.", "Barack Obama"], correct: 0, source: "Educart (Conceptual Mastery)" },
+        "Two Stories About Flying": { q: "Who is the author of 'His First Flight'?", options: ["Liam O'Flaherty", "Frederick Forsyth", "Paulo Coelho", "J.K. Rowling"], correct: 0, source: "Arihant (Speed & Revision)" },
+        "From the Diary of Anne Frank": { q: "Anne Frank's diary was written in:", options: ["German", "English", "Dutch", "French"], correct: 2, source: "PW (Affordability)" },
+        "The Hundred Dresses I": { q: "Who is the author of 'The Hundred Dresses'?", options: ["Eleanor Estes", "Enid Blyton", "Judy Blume", "Roald Dahl"], correct: 0, source: "Oswaal (Bulk Practice)" },
+        "The Hundred Dresses II": { q: "What did Wanda draw?", options: ["Houses", "Dresses", "Flowers", "Cars"], correct: 1, source: "Educart (Conceptual Mastery)" },
+        "Glimpses of India": { q: "Who wrote 'Coorg'?", options: ["Ruskin Bond", "Vikram Seth", "Khushwant Singh", "Amitav Ghosh"], correct: 0, source: "Arihant (Speed & Revision)" },
+        "Mijbil the Otter": { q: "Who wrote 'Mijbil the Otter'?", options: ["Gavin Maxwell", "Jim Corbett", "Ruskin Bond", "Kenneth Anderson"], correct: 0, source: "PW (Affordability)" },
+        "Madam Rides the Bus": { q: "Who wrote 'Madam Rides the Bus'?", options: ["Valliappan", "R.K. Narayan", "Mulk Raj Anand", "Khushwant Singh"], correct: 0, source: "Oswaal (Bulk Practice)" },
+        "The Sermon at Benares": { q: "Who delivered the sermon at Benares?", options: ["Gautama Buddha", "Mahavira", "Jesus Christ", "Prophet Muhammad"], correct: 0, source: "Educart (Conceptual Mastery)" },
+        "The Proposal": { q: "Who wrote 'The Proposal'?", options: ["Anton Chekhov", "Leo Tolstoy", "Maxim Gorky", "Ivan Turgenev"], correct: 0, source: "Arihant (Speed & Revision)" }
     };
 
     /* --- 3. LOGIC --- */
@@ -516,12 +777,48 @@
         document.getElementById('formSection').style.display = 'block';
     }
 
+    // HTML for the 4 specific books
+    function getBooksHTML() {
+        return `
+            <div class="resource-title">📚 Recommended Reference Books</div>
+            <div class="resource-grid" style="margin-bottom: 20px;">
+                <!-- Educart -->
+                <div class="resource-card" style="border-left: 4px solid #4f46e5; text-align: left; align-items: flex-start; padding: 10px;">
+                    <strong style="color: #4f46e5; font-size: 0.9rem;">Educart</strong>
+                    <div style="background: #e0e7ff; color: #4f46e5; font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; margin: 5px 0; display:inline-block; font-weight:600;">Conceptual Mastery</div>
+                    <p style="font-size: 0.75rem; color: #555; margin:0; line-height:1.3;">Matches CBSE’s competency-based questions; "sealed" mock papers.</p>
+                </div>
+                <!-- Oswaal -->
+                <div class="resource-card" style="border-left: 4px solid #0ea5e9; text-align: left; align-items: flex-start; padding: 10px;">
+                    <strong style="color: #0ea5e9; font-size: 0.9rem;">Oswaal</strong>
+                    <div style="background: #e0f2fe; color: #0ea5e9; font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; margin: 5px 0; display:inline-block; font-weight:600;">Bulk Practice</div>
+                    <p style="font-size: 0.75rem; color: #555; margin:0; line-height:1.3;">15+ papers, Topper’s Handwritten Answers, QR codes for videos.</p>
+                </div>
+                <!-- Arihant -->
+                <div class="resource-card" style="border-left: 4px solid #f59e0b; text-align: left; align-items: flex-start; padding: 10px;">
+                    <strong style="color: #f59e0b; font-size: 0.9rem;">Arihant (i-Succeed)</strong>
+                    <div style="background: #fef3c7; color: #f59e0b; font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; margin: 5px 0; display:inline-block; font-weight:600;">Speed & Revision</div>
+                    <p style="font-size: 0.75rem; color: #555; margin:0; line-height:1.3;">Rapid Revision Sheets; Easy, Medium, Hard stages.</p>
+                </div>
+                <!-- PW -->
+                <div class="resource-card" style="border-left: 4px solid #10b981; text-align: left; align-items: flex-start; padding: 10px;">
+                    <strong style="color: #10b981; font-size: 0.9rem;">PW (Physics Wallah)</strong>
+                    <div style="background: #d1fae5; color: #10b981; font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; margin: 5px 0; display:inline-block; font-weight:600;">Affordability</div>
+                    <p style="font-size: 0.75rem; color: #555; margin:0; line-height:1.3;">Mind Maps and "Answering Templates" for structure.</p>
+                </div>
+            </div>
+        `;
+    }
+
     function initDashboard(name, cls, sub, duration) {
         currentSubject = sub;
         const currentTopics = syllabusDB[cls]?.[sub] || ["Syllabus Loading Error"];
         
         document.getElementById('planTitle').innerText = `${sub} Study Plan`;
         document.getElementById('planMeta').innerText = `Student: ${name} | Class ${cls} | Duration: ${duration} Days`;
+        
+        // Insert Book HTML
+        document.getElementById('bookRecommendationContainer').innerHTML = getBooksHTML();
         
         // Channels
         const channels = getRecommendedList(cls);
@@ -571,7 +868,7 @@
         });
     }
 
-    // --- IMPROVED QUIZ LOGIC ---
+    // --- QUIZ LOGIC ---
     function openQuiz(topic) {
         document.getElementById('quizModal').style.display = 'flex';
         document.getElementById('quizTopicTitle').innerText = topic;
@@ -580,6 +877,7 @@
         let qData = quizDatabase[topic];
         
         if (!qData) {
+            // Fallback (should ideally never happen with this update)
             document.getElementById('quizQuestion').innerText = "Quiz coming soon for this specific topic!";
             document.getElementById('quizOptions').innerHTML = "<p>We are adding more questions daily. Please try another chapter.</p>";
             document.getElementById('quizSubmitBtn').disabled = true;
