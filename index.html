@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Learning Hub - AI & Quizzes</title>
+    <style>
+        :root {
+            --primary-color: #2980b9;
+            --secondary-color: #27ae60;
+            --video-color: #ff0000;
+            --book-color: #e67e22;
+            --rd-color: #d35400;
+            --cbse-color: #8e44ad;
+            --quiz-color: #e74c3c;
+            --chat-color: #2ecc71;
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --text-color: #2c3e50;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        header {
+            background: linear-gradient(135deg, #2c3e50, #2980b9);
+            color: white;
+            padding: 1rem 0;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        header h1 { margin: 0; font-size: 2rem; }
+        .header-actions {
+            position: absolute; top: 20px; right: 20px; display: flex; gap: 10px;
+        }
+        .score-badge, .feedback-btn {
+            background: rgba(255,255,255,0.2); color: white;
+            padding: 5px 15px; border-radius: 20px; font-weight: bold; 
+            border: 1px solid rgba(255,255,255,0.3); cursor: pointer; text-decoration: none; font-size: 0.9rem;
+        }
+        .score-badge { cursor: default; }
+        .feedback-btn:hover { background: rgba(255,255,255,0.3); }
+
+        main {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 1.5rem;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+        .input-section {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            width: 100%;
+            max-width: 380px;
+            border-top: 5px solid var(--primary-color);
+        }
+        .form-group { margin-bottom: 1.2rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: #555; font-size: 0.9rem; }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%; padding: 12px; border: 1px solid #bdc3c7; border-radius: 6px; font-size: 1rem; box-sizing: border-box;
+        }
+        button.generate-btn, button.back-btn {
+            width: 100%; padding: 12px; background-color: var(--primary-color); color: white; border: none;
+            border-radius: 6px; font-size: 1rem; font-weight: bold; cursor: pointer; margin-top: 10px;
+        }
+        button.generate-btn:hover, button.back-btn:hover { background-color: #1f618d; }
+        button.back-btn { background-color: #7f8c8d; width: auto; padding: 8px 15px; font-size: 0.9rem; }
+
+        .output-section { flex: 1; min-width: 320px; max-width: 1000px; width: 100%; }
+        .result-card {
+            background: var(--card-bg); border-radius: 12px; padding: 0; box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            display: none; animation: fadeIn 0.5s;
+        }
+        .result-header { background: #f8f9fa; padding: 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+        
+        /* Channel Section */
+        .channel-section {
+            margin: 15px 20px; padding: 15px; background: #eaf2f8; border-radius: 8px; border: 1px dashed var(--primary-color);
+        }
+        .channel-section h4 { margin: 0 0 10px 0; color: var(--primary-color); }
+        .channel-badges { display: flex; gap: 8px; flex-wrap: wrap; }
+        .channel-badge {
+            background: white; border: 1px solid var(--primary-color); color: var(--primary-color);
+            padding: 5px 12px; border-radius: 15px; font-size: 0.85rem; font-weight: 600;
+        }
+
+        /* Topic Card */
+        .topic-card {
+            background: white; border: 1px solid #e0e0e0; margin: 10px 20px; padding: 15px;
+            border-radius: 8px; display: flex; flex-direction: column; gap: 10px;
+        }
+        .topic-title { font-size: 1.1rem; font-weight: 700; color: #34495e; display: flex; align-items: center; gap: 10px; }
+        .topic-chapter-tag { font-size: 0.75rem; background: #eee; padding: 2px 6px; border-radius: 4px; color: #666; font-weight: normal; }
+        
+        .topic-actions { display: flex; gap: 8px; flex-wrap: wrap; border-top: 1px dashed #ddd; padding-top: 10px; }
+        .action-link, .action-btn {
+            padding: 6px 10px; border-radius: 4px; text-decoration: none; font-size: 0.8rem;
+            border: 1px solid; display: inline-flex; align-items: center; cursor: pointer; transition: 0.2s;
+        }
+        .mode-video { color: var(--video-color); border-color: var(--video-color); background: #fff0f0; }
+        .mode-book { color: var(--book-color); border-color: var(--book-color); background: #fdf2e9; }
+        .mode-cbse { color: var(--cbse-color); border-color: var(--cbse-color); background: #f5eef8; }
+        .mode-rd { color: var(--rd-color); border-color: var(--rd-color); background: #fbe6d4; font-weight: bold; }
+        .mode-quiz { color: white; border-color: var(--quiz-color); background: var(--quiz-color); font-weight: bold; border:none;}
+
+        .resource-title { padding: 15px 20px 5px 20px; font-weight: bold; color: #444; }
+        .resource-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; padding: 0 20px 20px 20px;
+        }
+        .resource-card {
+            background: #fff; border: 1px solid #eee; border-radius: 8px; padding: 15px; text-align: center;
+            text-decoration: none; color: #333; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: 0.2s;
+        }
+        .resource-card:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); border-color: var(--primary-color); }
+        .res-icon { font-size: 2rem; margin-bottom: 5px; }
+        .res-title { font-weight: bold; font-size: 0.85rem; }
+
+        /* Quiz Modal */
+        .modal {
+            display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.6); align-items: center; justify-content: center;
+        }
+        .modal-content {
+            background-color: white; padding: 30px; border-radius: 12px; width: 90%; max-width: 500px;
+            position: relative; text-align: center; border-top: 5px solid var(--quiz-color);
+        }
+        .close-modal { position: absolute; top: 10px; right: 15px; font-size: 24px; cursor: pointer; color: #aaa; }
+        .quiz-source-badge {
+            display: inline-block; background: #eee; color: #555; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; margin-bottom: 10px;
+        }
+        .quiz-options { text-align: left; margin: 20px 0; background: #f9f9f9; padding: 15px; border-radius: 8px; }
+        .quiz-options label { display: block; margin: 10px 0; cursor: pointer; }
+
+        /* Chatbot Widget */
+        .chatbot-widget {
+            position: fixed; bottom: 20px; right: 20px; z-index: 2000;
+        }
+        .chat-btn {
+            width: 60px; height: 60px; border-radius: 50%; background-color: var(--chat-color);
+            color: white; border: none; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            font-size: 24px; display: flex; align-items: center; justify-content: center; transition: 0.3s;
+        }
+        .chat-btn:hover { transform: scale(1.1); }
+        .chat-window {
+            display: none; position: absolute; bottom: 80px; right: 0; width: 300px; height: 400px;
+            background: white; border-radius: 12px; box-shadow: 0 5px 25px rgba(0,0,0,0.2);
+            flex-direction: column; overflow: hidden; border: 1px solid #ddd;
+        }
+        .chat-header {
+            background: var(--chat-color); color: white; padding: 10px; font-weight: bold; display: flex; justify-content: space-between; align-items: center;
+        }
+        .chat-messages {
+            flex: 1; padding: 10px; overflow-y: auto; background: #f9f9f9; display: flex; flex-direction: column; gap: 10px;
+        }
+        .message { padding: 8px 12px; border-radius: 10px; max-width: 80%; font-size: 0.9rem; }
+        .message.bot { background: white; border: 1px solid #ddd; align-self: flex-start; }
+        .message.user { background: var(--primary-color); color: white; align-self: flex-end; }
+        .chat-input-area { padding: 10px; border-top: 1px solid #ddd; display: flex; gap: 5px; background: white; }
+        .chat-input { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 20px; outline: none; }
+        .send-btn { background: var(--chat-color); color: white; border: none; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Smart Learning Hub</h1>
+    <div class="header-actions">
+        <div id="scoreDisplay" class="score-badge" style="display:none;">Score: 0</div>
+        <a href="#" onclick="openFeedback()" class="feedback-btn">Feedback</a>
+    </div>
+</header>
+
+<main>
+    <section class="input-section" id="formSection">
+        <h2>Plan Generator</h2>
+        <form id="learningForm">
+            <div class="form-group">
+                <label>Student Name</label>
+                <input type="text" id="userName" placeholder="Enter your name..." required>
+            </div>
+            <div class="form-group">
+                <label>Class</label>
+                <select id="studentClass" required onchange="updateSubjects()">
+                    <option value="" disabled selected>Select Class</option>
+                    <option value="6">Class 6</option>
+                    <option value="7">Class 7</option>
+                    <option value="8">Class 8</option>
+                    <option value="9">Class 9</option>
+                    <option value="10">Class 10</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Subject</label>
+                <select id="subject" required disabled>
+                    <option value="" disabled selected>First Select Class</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Duration (Days)</label>
+                <input type="number" id="durationValue" placeholder="e.g. 30" required min="1">
+            </div>
+            <button type="submit" class="generate-btn">Generate Smart Plan</button>
+        </form>
+    </section>
+
+    <section class="output-section">
+        <div id="loading" style="display:none; text-align: center; margin-top: 50px;">Loading Plan...</div>
+        
+        <div class="result-card" id="dashboardView">
+            <div class="result-header">
+                <div>
+                    <h2 id="planTitle" style="margin:0;">Study Plan</h2>
+                    <small id="planMeta">Details here</small>
+                </div>
+                <button class="back-btn" onclick="showForm()">← Back to Index</button>
+            </div>
+            
+            <div class="channel-section" id="channelSection" style="display:none;">
+                <h4>🎥 Recommended YouTube Channels for Class <span id="recClassLabel"></span></h4>
+                <div class="channel-badges" id="channelBadges"></div>
+            </div>
+
+            <div id="topicListContainer"></div>
+            
+            <div class="resource-title">🌐 eResources (Official & Additional Content)</div>
+            <div class="resource-grid">
+                <!-- Main Links -->
+                <a href="https://diksha.gov.in/" target="_blank" class="resource-card"><span class="res-icon">🎓</span><div class="res-title">DIKSHA</div></a>
+                <a href="https://epathshala.nic.in/" target="_blank" class="resource-card"><span class="res-icon">📖</span><div class="res-title">ePathshala</div></a>
+                <!-- CBSE Specific -->
+                <a href="https://www.cbse.gov.in/cbsenew/samplepaper.html" target="_blank" class="resource-card">
+                    <span class="res-icon">📝</span>
+                    <div class="res-title">Sample Papers</div>
+                </a>
+                <a href="https://www.cbse.gov.in/cbsenew/question-paper.html" target="_blank" class="resource-card">
+                    <span class="res-icon">📂</span>
+                    <div class="res-title">Prev Year Papers</div>
+                </a>
+                <a href="https://www.cbse.gov.in/cbsenew/question_bank.html" target="_blank" class="resource-card">
+                    <span class="res-icon">💡</span>
+                    <div class="res-title">Question Bank</div>
+                </a>
+                <!-- Others -->
+                <a href="https://nishtha.ncert.gov.in/" target="_blank" class="resource-card"><span class="res-icon">🏛️</span><div class="res-title">NISHTHA</div></a>
+                <a href="https://www.swayamprabha.gov.in/" target="_blank" class="resource-card"><span class="res-icon">📺</span><div class="res-title">Swayam Prabha</div></a>
+                <a href="https://ndli.gov.in/" target="_blank" class="resource-card"><span class="res-icon">📚</span><div class="res-title">NDLI Library</div></a>
+                <a href="https://pmevidya.gov.in/" target="_blank" class="resource-card"><span class="res-icon">🎬</span><div class="res-title">PM e-VIDYA</div></a>
+                <a href="https://ncert.nic.in/exemplar.html" target="_blank" class="resource-card"><span class="res-icon">✏️</span><div class="res-title">NCERT Exemplar</div></a>
+            </div>
+        </div>
+    </section>
+</main>
+
+<!-- Quiz Modal -->
+<div id="quizModal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal" onclick="closeQuiz()">&times;</span>
+        <h3 style="color:var(--quiz-color); margin-top:0;">Topic Quiz</h3>
+        <p style="color:#666; font-size:0.9rem;">Instruction: Answer correctly to earn points!</p>
+        
+        <!-- New: Source Badge -->
+        <div style="text-align: left; background: #fdfdfd; padding: 15px; border-radius: 8px; border:1px solid #eee;">
+            <span id="quizSourceBadge" class="quiz-source-badge">Source: --</span>
+            <strong id="quizTopicTitle" style="color:var(--primary-color); display:block; margin-bottom:10px; border-bottom:1px solid #eee; padding-bottom:5px;">Topic Name</strong>
+            <p id="quizQuestion" style="margin: 15px 0; font-size:1.1rem;">Question text...</p>
+            <div id="quizOptions" class="quiz-options"></div>
+        </div>
+        <button id="quizSubmitBtn" class="generate-btn" onclick="submitQuizAnswer()">Submit Answer</button>
+        <p id="quizFeedback" style="margin-top:15px; font-weight:bold; min-height:20px;"></p>
+    </div>
+</div>
+
+<!-- Feedback Modal -->
+<div id="feedbackModal" class="modal">
+    <div class="modal-content" style="border-top: 5px solid var(--secondary-color);">
+        <span class="close-modal" onclick="closeFeedback()">&times;</span>
+        <h3 style="color:var(--secondary-color); margin-top:0;">Send Feedback</h3>
+        <form onsubmit="submitFeedback(event)">
+            <div class="form-group">
+                <label>Name</label>
+                <input type="text" required placeholder="Your Name">
+            </div>
+            <div class="form-group">
+                <label>Rating</label>
+                <select required>
+                    <option value="5">⭐⭐⭐⭐⭐ Excellent</option>
+                    <option value="4">⭐⭐⭐⭐ Good</option>
+                    <option value="3">⭐⭐⭐ Average</option>
+                    <option value="2">⭐⭐ Poor</option>
+                    <option value="1">⭐ Bad</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Comments</label>
+                <textarea rows="3" required placeholder="Tell us how we can improve..."></textarea>
+            </div>
+            <button type="submit" class="generate-btn">Submit Feedback</button>
+        </form>
+    </div>
+</div>
+
+<!-- Chatbot Widget -->
+<div class="chatbot-widget">
+    <div class="chat-window" id="chatWindow">
+        <div class="chat-header">
+            <span>AI Study Assistant</span>
+            <span onclick="toggleChat()" style="cursor:pointer;">✕</span>
+        </div>
+        <div class="chat-messages" id="chatMsgs">
+            <div class="message bot">Hello! Ask me anything about NCERT, CBSE, or your subjects!</div>
+        </div>
+        <div class="chat-input-area">
+            <input type="text" id="chatInput" class="chat-input" placeholder="Ask a question..." onkeypress="handleChatEnter(event)">
+            <button class="send-btn" onclick="sendChat()">➤</button>
+        </div>
+    </div>
+    <button class="chat-btn" onclick="toggleChat()">💬</button>
+</div>
+
+<script>
+    /* --- 1. DATA CONFIGURATION --- */
+    const subjectMapping = {
+        "6": ["Mathematics", "Science", "Social Science", "English", "Hindi", "Telugu"],
+        "7": ["Mathematics", "Science", "Social Science", "English", "Hindi", "Telugu"],
+        "8": ["Mathematics", "Science", "Social Science", "English", "Hindi", "Telugu"],
+        "9": ["Mathematics", "Physics", "Chemistry", "Biology", "History", "Geography", "Civics", "Economics", "English", "Hindi"],
+        "10": ["Mathematics", "Physics", "Chemistry", "Biology", "History", "Geography", "Civics", "Economics", "English", "Hindi"]
+    };
+
+    const syllabusDB = {
+        "6": {
+            "Mathematics": ["Knowing Our Numbers", "Whole Numbers", "Playing with Numbers", "Basic Geometrical Ideas", "Understanding Elementary Shapes", "Integers", "Fractions", "Decimals", "Data Handling", "Mensuration", "Algebra", "Ratio and Proportion", "Symmetry", "Practical Geometry"],
+            "Science": ["Food: Where Does It Come From", "Components of Food", "Fibre to Fabric", "Sorting Materials into Groups", "Separation of Substances", "Changes Around Us", "Getting to Know Plants", "Body Movements", "The Living Organisms and Their Surroundings", "Motion and Measurement of Distances", "Light Shadows and Reflections", "Electricity and Circuits", "Fun with Magnets", "Water", "Air Around Us", "Garbage In Garbage Out"],
+            "Social Science": ["History: What Where How and When", "Geography: The Earth in the Solar System", "Geography: Globe Latitudes and Longitudes", "Geography: Motions of the Earth", "Geography: Maps", "Geography: Major Domains of the Earth", "Geography: Major Landforms of the Earth", "Geography: Our Country India", "Geography: India Climate Vegetation and Wildlife", "Civics: Understanding Diversity", "Civics: Diversity and Discrimination", "Civics: What is Government", "Civics: Key Elements of a Democratic Government", "Civics: Panchayati Raj", "Civics: Rural Administration", "Civics: Urban Administration"],
+            "English": ["A Tale of Two Birds", "The Friendly Mongoose", "The Shepherd’s Treasure", "The Old-Clock Shop", "Tansen", "The Monkey and the Crocodile", "The Wonder Called Sleep", "A Pact with the Sun", "What Happened to the Reptiles", "A Strange Wrestling Match"]
+        },
+        "7": {
+            "Mathematics": ["Integers", "Fractions and Decimals", "Data Handling", "Simple Equations", "Lines and Angles", "The Triangle and its Properties", "Congruence of Triangles", "Comparing Quantities", "Rational Numbers", "Practical Geometry", "Perimeter and Area", "Algebraic Expressions", "Exponents and Powers", "Symmetry", "Visualising Solid Shapes"],
+            "Science": ["Nutrition in Plants", "Nutrition in Animals", "Fibre to Fabric", "Heat", "Acids Bases and Salts", "Physical and Chemical Changes", "Weather Climate and Adaptations", "Winds Storms and Cyclones", "Soil", "Respiration in Organisms", "Transportation in Animals and Plants", "Reproduction in Plants", "Motion and Time", "Electric Current and Its Effects", "Light", "Water: A Precious Resource", "Forests: Our Lifeline", "Wastewater Story"],
+            "Social Science": ["Environment", "Inside Our Earth", "Our Changing Earth", "Air", "Water", "Natural Vegetation and Wild Life", "Human Environment Settlement Transport and Communication", "Human Environment Interaction The Tropical and the Subtropical Region", "Life in the Temperate Grasslands", "Life in the Deserts", "Tracing Changes Through A Thousand Years", "New Kings and Kingdoms", "The Delhi Sultans", "The Mughal Empire", "Rulers and Buildings", "Towns Traders and Craftspersons", "Tribals Dikus and the Vision of a Golden Age", "Devotional Paths to the Divine", "The Making of Regional Cultures", "Eighteenth-Century Political Formations", "On Equality", "Role of the Government in Health", "How the State Government Works", "Growing up as Boys and Girls", "Women Change the World", "Understanding Media", "Understanding Advertising", "Markets Around Us", "A Shirt in the Market"],
+            "English": ["Three Questions", "A Gift of Chappals", "Gopal and the Hilsa Fish", "The Ashes That Made Trees Bloom", "Chandni", "The Bear Story", "A Tiger in the House", "The Alien Hand"]
+        },
+        "8": {
+            "Mathematics": ["Rational Numbers", "Linear Equations in One Variable", "Understanding Quadrilaterals", "Practical Geometry", "Data Handling", "Squares and Square Roots", "Cubes and Cube Roots", "Comparing Quantities", "Algebraic Expressions and Identities", "Visualising Solid Shapes", "Mensuration", "Exponents and Powers", "Direct and Inverse Proportions", "Factorisation", "Introduction to Graphs", "Playing with Numbers"],
+            "Science": ["Crop Production and Management", "Microorganisms: Friend and Foe", "Synthetic Fibres and Plastics", "Materials: Metals and Non-Metals", "Coal and Petroleum", "Combustion and Flame", "Conservation of Plants and Animals", "Cell — Structure and Functions", "Reproduction in Animals", "Reaching the Age of Adolescence", "Force and Pressure", "Friction", "Sound", "Chemical Effects of Electric Current", "Some Natural Phenomena", "Light", "Stars and The Solar System", "Pollution of Air and Water"],
+            "Social Science": ["Resources", "Land Soil Water Natural Vegetation and Wildlife Resources", "Mineral and Power Resources", "Agriculture", "Industries", "Human Resources", "How When and Where", "From Trade to Territory", "Ruling the Countryside", "Tribals Dikus and the Vision of a Golden Age", "When People Rebel", "Colonialism and the City", "Weavers Iron Smelters and Factory Owners", "Civilising the Native Educating the Nation", "Women Caste and Reform", "The Changing World of Visual Arts", "The Making of the National Movement 1870s-1947", "India After Independence", "The Indian Constitution", "Understanding Secularism", "Why Do We Need a Parliament", "Understanding Laws", "Judiciary", "Understanding Our Criminal Justice System", "Understanding Marginalisation", "Confronting Marginalisation", "Public Facilities", "Law and Social Justice"],
+            "English": ["The Best Christmas Present in the World", "The Ant and the Cricket", "The Tsunami", "Geography Lesson", "Glimpses of the Past", "Bepin Choudhury’s Lapse of Memory", "The Summit Within", "A Visit to Cambridge", "The Great Stone Face I", "The Great Stone Face II"]
+        },
+        "9": {
+            "Mathematics": ["Number Systems", "Polynomials", "Coordinate Geometry", "Linear Equations in Two Variables", "Introduction to Euclid’s Geometry", "Lines and Angles", "Triangles", "Quadrilaterals", "Areas of Parallelograms and Triangles", "Circles", "Constructions", "Heron’s Formula", "Surface Areas and Volumes", "Statistics", "Probability"],
+            "Physics": ["Motion", "Force and Laws of Motion", "Gravitation", "Work and Energy", "Sound"],
+            "Chemistry": ["Matter in Our Surroundings", "Is Matter Around Us Pure", "Atoms and Molecules", "Structure of the Atom"],
+            "Biology": ["The Fundamental Unit of Life", "Tissues", "Diversity in Living Organisms", "Why Do We Fall Ill", "Natural Resources", "Improvement in Food Resources"],
+            "History": ["The French Revolution", "Socialism in Europe and the Russian Revolution", "Nazism and the Rise of Hitler", "Forest Society and Colonialism", "Pastoralists in the Modern World", "Peasants and Farmers", "History and Sport: The Story of Cricket", "Clothing: A Social History"],
+            "Geography": ["India Size and Location", "Physical Features of India", "Drainage", "Climate", "Natural Vegetation and Wild Life", "Population"],
+            "Civics": ["What is Democracy Why Democracy", "Constitutional Design", "Electoral Politics", "Working of Institutions", "Democratic Rights"],
+            "Economics": ["The Story of Village Palampur", "People as Resource", "Poverty as a Challenge", "Food Security in India"],
+            "English": ["The Fun They Had", "The Sound of Music", "The Little Girl", "A Truly Beautiful Mind", "The Snake and the Mirror", "My Childhood", "Packing", "Reach for the Top", "The Bond of Love", "Kathmandu", "If I Were You"]
+        },
+        "10": {
+            "Mathematics": ["Real Numbers", "Polynomials", "Pair of Linear Equations in Two Variables", "Quadratic Equations", "Arithmetic Progressions", "Triangles", "Coordinate Geometry", "Introduction to Trigonometry", "Some Applications of Trigonometry", "Circles", "Constructions", "Areas Related to Circles", "Surface Areas and Volumes", "Statistics", "Probability"],
+            "Physics": ["Light Reflection and Refraction", "Human Eye and Colourful World", "Electricity", "Magnetic Effects of Electric Current", "Sources of Energy"],
+            "Chemistry": ["Chemical Reactions and Equations", "Acids Bases and Salts", "Metals and Non-metals", "Carbon and its Compounds", "Periodic Classification of Elements"],
+            "Biology": ["Life Processes", "Control and Coordination", "How do Organisms Reproduce", "Heredity and Evolution", "Our Environment", "Management of Natural Resources"],
+            "History": ["The Rise of Nationalism in Europe", "Nationalism in India", "The Making of a Global World", "The Age of Industrialisation", "Print Culture and the Modern World"],
+            "Geography": ["Resources and Development", "Forest and Wildlife Resources", "Water Resources", "Agriculture", "Minerals and Energy Resources", "Manufacturing Industries", "Lifelines of National Economy"],
+            "Civics": ["Power Sharing", "Federalism", "Democracy and Diversity", "Gender Religion and Caste", "Popular Struggles and Movements", "Political Parties", "Outcomes of Democracy", "Challenges to Democracy"],
+            "Economics": ["Development", "Sectors of the Indian Economy", "Money and Credit", "Globalisation and the Indian Economy", "Consumer Rights"],
+            "English": ["A Letter to God", "Nelson Mandela Long Walk to Freedom", "Two Stories About Flying", "From the Diary of Anne Frank", "The Hundred Dresses I", "The Hundred Dresses II", "Glimpses of India", "Mijbil the Otter", "Madam Rides the Bus", "The Sermon at Benares", "The Proposal"]
+        }
+    };
+
+    /* --- 2. REAL QUIZ DATABASE (With Sources) --- */
+    // Sources: Educart, Oswaal, Arihant, PW
+    const quizDatabase = {
+        "Integers": { q: "Which of the following is an integer?", options: ["1.5", "-7", "3/2", "0.01"], correct: 1, source: "Arihant (Rapid Revision)" },
+        "Fractions and Decimals": { q: "What is 1/2 + 1/4?", options: ["2/6", "3/4", "1/8", "1"], correct: 1, source: "Arihant (Rapid Revision)" },
+        "Data Handling": { q: "The mean of 5, 10, 15 is:", options: ["5", "10", "15", "20"], correct: 1, source: "Oswaal (Bulk Practice)" },
+        "Nutrition in Plants": { q: "Which component of food helps in preventing constipation?", options: ["Proteins", "Fats", "Roughage", "Vitamins"], correct: 2, source: "PW (Concept Mastery)" },
+        "Nutrition in Animals": { q: "Humans have a digestive system specialized for:", options: ["Only Plants", "Only Meat", "Both Plant and Meat", "None"], correct: 2, source: "PW (Concept Mastery)" },
+        "Heat": { q: "In which mode of heat transfer does actual movement of molecules take place?", options: ["Conduction", "Convection", "Radiation", "None"], correct: 1, source: "Educart (Conceptual Mastery)" },
+        "Motion": { q: "If an object covers equal distances in equal intervals of time, it is said to be:", options: ["Uniform Motion", "Non-Uniform Motion", "Circular Motion", "Linear Motion"], correct: 0, source: "Arihant (Rapid Revision)" },
+        "Force and Laws of Motion": { q: "Which law explains the recoil of a gun?", options: ["First Law", "Second Law", "Third Law", "Law of Gravitation"], correct: 2, source: "Oswaal (Bulk Practice)" },
+        "Atoms and Molecules": { q: "Which of the following has maximum number of atoms?", options: ["1g of Gold", "1g of Silver", "1g of Oxygen", "1g of Carbon"], correct: 2, source: "Educart (Conceptual Mastery)" },
+        "Structure of the Atom": { q: "The maximum number of electrons that can be accommodated in the third shell is:", options: ["2", "8", "18", "32"], correct: 2, source: "PW (Affordability)" },
+        
+        "Poverty as a Challenge": { 
+            q: "Which of the following is a major cause of poverty in India?", 
+            options: ["Low level of economic development", "High population growth", "Unequal distribution of wealth", "All of the above"], 
+            correct: 3, source: "Educart (Competency Based)" 
+        },
+        "The French Revolution": { 
+            q: "Which estate paid taxes to the state in France before the revolution?", 
+            options: ["First Estate", "Second Estate", "Third Estate", "All Estates"], 
+            correct: 2, source: "Oswaal (Bulk Practice)" 
+        },
+        "Nationalism in India": { 
+            q: "Who was the leader of the Peasant Movement in Awadh?", 
+            options: ["Jawaharlal Nehru", "Mahatma Gandhi", "Baba Ramchandra", "Subhas Chandra Bose"], 
+            correct: 2, source: "PW (Answering Templates)" 
+        },
+        "Coordinate Geometry": { 
+            // User's style question logic
+            q: "Find the midpoint of the points (2, 3) and (6, 7).", 
+            options: ["(4, 5)", "(8, 10)", "(2, 4)", "(3, 6)"], 
+            correct: 0, source: "Educart (Competency Based)" 
+        },
+        "Real Numbers": { 
+            q: "The decimal expansion of pi is:", 
+            options: ["Terminating", "Non-terminating Repeating", "Non-terminating Non-repeating", "None"], 
+            correct: 2, source: "Oswaal (Bulk Practice)" 
+        },
+        "Polynomials": { 
+            q: "The degree of the polynomial x^2 - 3x + 2 is:", 
+            options: ["0", "1", "2", "3"], 
+            correct: 2, source: "Arihant (Speed & Revision)" 
+        },
+        "Triangles": { 
+            q: "If two angles of a triangle are 60° and 70°, the third angle is:", 
+            options: ["50°", "40°", "30°", "80°"], 
+            correct: 0, source: "PW (Concept Mastery)" 
+        },
+        "Chemical Reactions": { 
+            q: "Rusting of iron is an example of:", 
+            options: ["Combination Reaction", "Decomposition Reaction", "Oxidation Reaction", "Displacement Reaction"], 
+            correct: 2, source: "Educart (Competency Based)" 
+        },
+        "Acids Bases and Salts": { 
+            q: "pH of pure water is:", 
+            options: ["0", "7", "14", "1"], 
+            correct: 1, source: "Arihant (Rapid Revision)" 
+        },
+        "Life Processes": { 
+            q: "In amoeba, food is digested in:", 
+            options: ["Food Vacuole", "Nucleus", "Pseudopodia", "Cytoplasm"], 
+            correct: 0, source: "Oswaal (Bulk Practice)" 
+        },
+        "Control and Coordination": { 
+            q: "Which part of the brain controls involuntary actions?", 
+            options: ["Cerebrum", "Cerebellum", "Medulla", "None"], 
+            correct: 2, source: "PW (Answering Templates)" 
+        }
+    };
+
+    /* --- 3. LOGIC --- */
+    let currentScore = 0;
+    let currentQuizCorrectAnswer = null;
+    let currentSubject = "";
+
+    function getPrimaryChannel(cls) {
+        return (parseInt(cls) >= 9) ? "NextToppers" : "LearnOhub";
+    }
+
+    function getRecommendedList(cls) {
+        if(parseInt(cls) >= 9) {
+            return ["Physics Wallah", "Vedantu Class 9 & 10", "Khan Academy", "Magnet Brains"];
+        } else {
+            return ["LearnOhub", "Magnet Brains", "Peekaboo Kidz"];
+        }
+    }
+
+    function updateSubjects() {
+        const classVal = document.getElementById('studentClass').value;
+        const subjectSelect = document.getElementById('subject');
+        subjectSelect.innerHTML = '<option value="" disabled selected>Select Subject</option>';
+        if (classVal && subjectMapping[classVal]) {
+            subjectSelect.disabled = false;
+            subjectMapping[classVal].forEach(sub => {
+                const option = document.createElement('option');
+                option.value = sub;
+                option.textContent = sub;
+                subjectSelect.appendChild(option);
+            });
+        } else {
+            subjectSelect.disabled = true;
+        }
+    }
+
+    document.getElementById('learningForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const name = document.getElementById('userName').value;
+        const cls = document.getElementById('studentClass').value;
+        const sub = document.getElementById('subject').value;
+        const durationVal = document.getElementById('durationValue').value;
+
+        if(!cls || !sub) { alert("Please select Class and Subject."); return; }
+
+        document.getElementById('loading').style.display = 'block';
+        document.getElementById('dashboardView').style.display = 'none';
+        document.getElementById('formSection').style.display = 'none';
+
+        setTimeout(() => {
+            initDashboard(name, cls, sub, durationVal);
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('dashboardView').style.display = 'block';
+        }, 500);
+    });
+
+    function showForm() {
+        document.getElementById('dashboardView').style.display = 'none';
+        document.getElementById('formSection').style.display = 'block';
+    }
+
+    function initDashboard(name, cls, sub, duration) {
+        currentSubject = sub;
+        const currentTopics = syllabusDB[cls]?.[sub] || ["Syllabus Loading Error"];
+        
+        document.getElementById('planTitle').innerText = `${sub} Study Plan`;
+        document.getElementById('planMeta').innerText = `Student: ${name} | Class ${cls} | Duration: ${duration} Days`;
+        
+        // Channels
+        const channels = getRecommendedList(cls);
+        const channelSection = document.getElementById('channelSection');
+        const channelBadges = document.getElementById('channelBadges');
+        const recClassLabel = document.getElementById('recClassLabel');
+        
+        channelSection.style.display = 'block';
+        recClassLabel.innerText = cls;
+        channelBadges.innerHTML = '';
+        channels.forEach(ch => {
+            const span = document.createElement('span');
+            span.className = 'channel-badge';
+            span.innerText = ch;
+            channelBadges.appendChild(span);
+        });
+
+        const list = document.getElementById('topicListContainer');
+        list.innerHTML = "";
+        const primaryChannel = getPrimaryChannel(cls);
+
+        currentTopics.forEach((topic, index) => {
+            const query = `${primaryChannel} Class ${cls} ${sub} ${topic}`;
+            
+            let practiceBtn = "";
+            if (sub === "Mathematics") {
+                practiceBtn = `<a href="https://www.google.com/search?q=${encodeURIComponent("RD Sharma Class " + cls + " " + topic)}" target="_blank" class="action-link mode-rd">RD Sharma / Practice</a>`;
+            } else {
+                practiceBtn = `<a href="https://www.cbse.gov.in/cbsenew/samplepaper.html" target="_blank" class="action-link mode-cbse">Sample Papers</a>`;
+            }
+
+            let actionsHtml = `
+                <a href="https://www.youtube.com/results?search_query=${encodeURIComponent(query)}" target="_blank" class="action-link mode-video">▶ Video</a>
+                <a href="https://ncert.nic.in/textbook.php" target="_blank" class="action-link mode-book">📖 NCERT</a>
+                <a href="https://cbseacademic.nic.in/" target="_blank" class="action-link mode-cbse">🏫 CBSE</a>
+                <button onclick="openQuiz('${topic}')" class="action-link mode-quiz">Topic Quiz</button>
+                ${practiceBtn}
+            `;
+
+            const div = document.createElement('div');
+            div.className = 'topic-card';
+            div.innerHTML = `
+                <div class="topic-title">${topic} <span class="topic-chapter-tag">Ch ${index+1}</span></div>
+                <div class="topic-actions">${actionsHtml}</div>
+            `;
+            list.appendChild(div);
+        });
+    }
+
+    // --- IMPROVED QUIZ LOGIC ---
+    function openQuiz(topic) {
+        document.getElementById('quizModal').style.display = 'flex';
+        document.getElementById('quizTopicTitle').innerText = topic;
+        document.getElementById('quizFeedback').innerText = "";
+        
+        let qData = quizDatabase[topic];
+        
+        if (!qData) {
+            document.getElementById('quizQuestion').innerText = "Quiz coming soon for this specific topic!";
+            document.getElementById('quizOptions').innerHTML = "<p>We are adding more questions daily. Please try another chapter.</p>";
+            document.getElementById('quizSubmitBtn').disabled = true;
+            document.getElementById('quizSubmitBtn').innerText = "Not Available";
+            document.getElementById('quizSourceBadge').innerText = "Source: --";
+            currentQuizCorrectAnswer = -1;
+            return;
+        }
+
+        document.getElementById('quizSubmitBtn').disabled = false;
+        document.getElementById('quizSubmitBtn').innerText = "Submit Answer";
+
+        document.getElementById('quizQuestion').innerText = qData.q;
+        currentQuizCorrectAnswer = qData.correct;
+        document.getElementById('quizSourceBadge').innerText = "Source: " + qData.source;
+
+        const optsDiv = document.getElementById('quizOptions');
+        optsDiv.innerHTML = "";
+        qData.options.forEach((opt, idx) => {
+            optsDiv.innerHTML += `<label><input type="radio" name="quizOpt" value="${idx}"> ${opt}</label>`;
+        });
+    }
+
+    function closeQuiz() {
+        document.getElementById('quizModal').style.display = 'none';
+    }
+
+    function submitQuizAnswer() {
+        if (currentQuizCorrectAnswer === -1) return;
+
+        const selected = document.querySelector('input[name="quizOpt"]:checked');
+        const feedback = document.getElementById('quizFeedback');
+        
+        if(!selected) {
+            feedback.innerText = "Please select an option!";
+            feedback.style.color = "red";
+            return;
+        }
+
+        if(parseInt(selected.value) === currentQuizCorrectAnswer) {
+            feedback.innerText = "Correct! +10 Points 🎉";
+            feedback.style.color = "green";
+            currentScore += 10;
+            document.getElementById('scoreDisplay').style.display = 'block';
+            document.getElementById('scoreDisplay').innerText = "Score: " + currentScore;
+        } else {
+            feedback.innerText = "Incorrect. Try again!";
+            feedback.style.color = "red";
+        }
+    }
+
+    // --- CHATBOT LOGIC ---
+    function toggleChat() {
+        const win = document.getElementById('chatWindow');
+        win.style.display = (win.style.display === 'flex') ? 'none' : 'flex';
+    }
+
+    function handleChatEnter(e) {
+        if (e.key === 'Enter') sendChat();
+    }
+
+    function sendChat() {
+        const input = document.getElementById('chatInput');
+        const text = input.value.trim();
+        if(!text) return;
+
+        const msgs = document.getElementById('chatMsgs');
+        msgs.innerHTML += `<div class="message user">${text}</div>`;
+        input.value = "";
+        msgs.scrollTop = msgs.scrollHeight;
+
+        // Simulate AI Thinking
+        setTimeout(() => {
+            const searchLink = `https://www.google.com/search?q=${encodeURIComponent(text + " site:ncert.nic.in OR site:cbse.gov.in")}`;
+            const reply = `I'm searching NCERT/CBSE sources for "<strong>${text}</strong>".<br><br>
+            <a href="${searchLink}" target="_blank" style="color:var(--chat-color);">🔍 Click here for the official answer</a>`;
+            
+            msgs.innerHTML += `<div class="message bot">${reply}</div>`;
+            msgs.scrollTop = msgs.scrollHeight;
+        }, 1000);
+    }
+
+    // --- FEEDBACK LOGIC ---
+    function openFeedback() {
+        document.getElementById('feedbackModal').style.display = 'flex';
+    }
+    function closeFeedback() {
+        document.getElementById('feedbackModal').style.display = 'none';
+    }
+    function submitFeedback(e) {
+        e.preventDefault();
+        alert("Thank you for your feedback! We appreciate it.");
+        closeFeedback();
+    }
+</script>
+
+</body>
+</html>
