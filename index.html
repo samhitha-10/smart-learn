@@ -224,6 +224,15 @@
                 <label>Duration (Days)</label>
                 <input type="number" id="durationValue" placeholder="e.g. 30" required min="1">
             </div>
+            <!-- NEW: STUDY PACE SELECTOR -->
+            <div class="form-group">
+                <label>Study Pace (Performance)</label>
+                <select id="studyPace" required>
+                    <option value="1" selected>Normal (1 Chapter / Day)</option>
+                    <option value="2">Fast (2 Chapters / Day)</option>
+                    <option value="0.5">Slow (0.5 Chapters / Day)</option>
+                </select>
+            </div>
             <button type="submit" class="generate-btn">Generate Smart Plan</button>
         </form>
     </section>
@@ -767,6 +776,7 @@
         const cls = document.getElementById('studentClass').value;
         const sub = document.getElementById('subject').value;
         const durationVal = document.getElementById('durationValue').value;
+        const paceVal = document.getElementById('studyPace').value; // NEW
 
         if(!cls || !sub) { alert("Please select Class and Subject."); return; }
 
@@ -775,7 +785,7 @@
         document.getElementById('formSection').style.display = 'none';
 
         setTimeout(() => {
-            initDashboard(name, cls, sub, durationVal);
+            initDashboard(name, cls, sub, durationVal, paceVal);
             document.getElementById('loading').style.display = 'none';
             document.getElementById('dashboardView').style.display = 'block';
         }, 500);
@@ -819,29 +829,35 @@
         `;
     }
 
-    function initDashboard(name, cls, sub, duration) {
+    function initDashboard(name, cls, sub, duration, pace) {
         currentSubject = sub;
         const currentTopics = syllabusDB[cls]?.[sub] || ["Syllabus Loading Error"];
         
         document.getElementById('planTitle').innerText = `${sub} Study Plan`;
         
-        // --- SMART PLAN LOGIC ---
-        const totalTopics = currentTopics.length;
+        // --- UPDATED LOGIC: PACE CALCULATION ---
         const days = parseInt(duration);
+        const chaptersPerDay = parseFloat(pace);
+        const effectiveCapacity = Math.floor(days * chaptersPerDay); // How many chapters can actually be done
+        const totalTopics = currentTopics.length;
+        
         let topicsToDisplay = [];
         let planBadgeHTML = "";
         let planDescription = "";
 
-        if (days >= totalTopics) {
+        if (effectiveCapacity >= totalTopics) {
             // Full Plan
             topicsToDisplay = currentTopics;
             planBadgeHTML = `<span class="plan-badge">Full Plan</span>`;
-            planDescription = `Student: ${name} | Class ${cls} | Duration: ${days} Days (Leisure Pace)`;
+            planDescription = `Student: ${name} | Class ${cls} | Duration: ${days} Days (All ${totalTopics} Chapters)`;
         } else {
-            // Priority Plan (Short Duration)
-            topicsToDisplay = currentTopics.slice(0, days); // Show only the first N chapters
-            planBadgeHTML = `<span class="priority-badge">Priority Plan</span>`;
-            planDescription = `Student: ${name} | Class ${cls} | Duration: ${days} Days (Focus on ${days} Key Chapters)`;
+            // Priority Plan (Based on Performance/Speed)
+            topicsToDisplay = currentTopics.slice(0, effectiveCapacity);
+            
+            let paceText = chaptersPerDay === 2 ? "(Fast Pace)" : (chaptersPerDay === 0.5 ? "(Slow Pace)" : "(Normal Pace)");
+            
+            planBadgeHTML = `<span class="priority-badge">Priority Plan ${paceText}</span>`;
+            planDescription = `Student: ${name} | Class ${cls} | Capacity: ${effectiveCapacity} Chapters in ${days} Days`;
         }
 
         document.getElementById('planMeta').innerHTML = `${planDescription} ${planBadgeHTML}`;
