@@ -129,6 +129,15 @@
         .res-icon { font-size: 2rem; margin-bottom: 5px; }
         .res-title { font-weight: bold; font-size: 0.85rem; }
 
+        /* Plan Badges */
+        .plan-badge {
+            background: var(--secondary-color); color: white; padding: 4px 10px; border-radius: 4px; font-size: 0.75rem; margin-left: 10px; text-transform: uppercase; font-weight: bold;
+        }
+        .priority-badge {
+            background: #c0392b; color: white; padding: 4px 10px; border-radius: 4px; font-size: 0.75rem; margin-left: 10px; text-transform: uppercase; font-weight: bold; animation: pulse 2s infinite;
+        }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+
         /* Quiz Modal */
         .modal {
             display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%;
@@ -387,7 +396,7 @@
         }
     };
 
-    /* --- 2. COMPLETE QUIZ DATABASE (Covers every single topic) --- */
+    /* --- 2. COMPLETE QUIZ DATABASE --- */
     const quizDatabase = {
         // --- CLASS 6 ---
         "Knowing Our Numbers": { q: "Which is the greatest 7-digit number?", options: ["9999998", "9999999", "1000000", "9999990"], correct: 1, source: "Arihant (Speed & Revision)" },
@@ -815,7 +824,27 @@
         const currentTopics = syllabusDB[cls]?.[sub] || ["Syllabus Loading Error"];
         
         document.getElementById('planTitle').innerText = `${sub} Study Plan`;
-        document.getElementById('planMeta').innerText = `Student: ${name} | Class ${cls} | Duration: ${duration} Days`;
+        
+        // --- SMART PLAN LOGIC ---
+        const totalTopics = currentTopics.length;
+        const days = parseInt(duration);
+        let topicsToDisplay = [];
+        let planBadgeHTML = "";
+        let planDescription = "";
+
+        if (days >= totalTopics) {
+            // Full Plan
+            topicsToDisplay = currentTopics;
+            planBadgeHTML = `<span class="plan-badge">Full Plan</span>`;
+            planDescription = `Student: ${name} | Class ${cls} | Duration: ${days} Days (Leisure Pace)`;
+        } else {
+            // Priority Plan (Short Duration)
+            topicsToDisplay = currentTopics.slice(0, days); // Show only the first N chapters
+            planBadgeHTML = `<span class="priority-badge">Priority Plan</span>`;
+            planDescription = `Student: ${name} | Class ${cls} | Duration: ${days} Days (Focus on ${days} Key Chapters)`;
+        }
+
+        document.getElementById('planMeta').innerHTML = `${planDescription} ${planBadgeHTML}`;
         
         // Insert Book HTML
         document.getElementById('bookRecommendationContainer').innerHTML = getBooksHTML();
@@ -840,7 +869,7 @@
         list.innerHTML = "";
         const primaryChannel = getPrimaryChannel(cls);
 
-        currentTopics.forEach((topic, index) => {
+        topicsToDisplay.forEach((topic, index) => {
             const query = `${primaryChannel} Class ${cls} ${sub} ${topic}`;
             
             let practiceBtn = "";
@@ -877,7 +906,6 @@
         let qData = quizDatabase[topic];
         
         if (!qData) {
-            // Fallback (should ideally never happen with this update)
             document.getElementById('quizQuestion').innerText = "Quiz coming soon for this specific topic!";
             document.getElementById('quizOptions').innerHTML = "<p>We are adding more questions daily. Please try another chapter.</p>";
             document.getElementById('quizSubmitBtn').disabled = true;
@@ -949,7 +977,6 @@
         input.value = "";
         msgs.scrollTop = msgs.scrollHeight;
 
-        // Simulate AI Thinking
         setTimeout(() => {
             const searchLink = `https://www.google.com/search?q=${encodeURIComponent(text + " site:ncert.nic.in OR site:cbse.gov.in")}`;
             const reply = `I'm searching NCERT/CBSE sources for "<strong>${text}</strong>".<br><br>
